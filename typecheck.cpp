@@ -1,5 +1,4 @@
 #include "typecheck.hpp"
-
 // Defines the function used to throw type errors. The possible
 // type errors are defined as an enumeration in the header file.
 void typeError(TypeErrorCode code) {
@@ -62,24 +61,105 @@ void typeError(TypeErrorCode code) {
   exit(1);
 }
 
+
+
 // TypeCheck Visitor Functions: These are the functions you will
 // complete to build the symbol table and type check the program.
 // Not all functions must have code, many may be left empty.
 
 void TypeCheck::visitProgramNode(ProgramNode* node) {
   // WRITEME: Replace with code if necessary
+  classTable = new ClassTable();
+  node->visit_children(this);
+
+  if(classTable->find("Main") == classTable->end())
+    typeError(no_main_class);
+
 }
 
 void TypeCheck::visitClassNode(ClassNode* node) {
-  // WRITEME: Replace with code if necessary
+  ClassInfo clsinfo;
+  std::string superClassName, currentClassName;
+
+
+  // initialization of tables 
+  currentMethodTable = new MethodTable();
+  currentVariableTable = new VariableTable();
+
+  // checking if superClass exists and inheriting its variables
+  clsinfo.superClassName = "";
+  clsinfo.membersSize = 0;
+  clsinfo.methods = currentMethodTable;
+  clsinfo.members = currentVariableTable;
+  superClassName = "";
+  currentClassName = node->identifier_1->name;
+  currentMemberOffset = 0;
+
+  if(node->identifier_2) {
+    superClassName = node->identifier_2->name;
+    clsinfo.superClassName = superClassName;
+
+    //checking if immediate superclassName exists
+    if(classTable->find(superClassName) == classTable->end()) 
+      typeError(undefined_class);
+
+    //inheriting superclass methods and members
+    while(superClassName != "") {
+      auto superClassInfo = classTable->find(superClassName)->second;
+      if(superClassInfo.members) {
+        for(auto memItr = superClassInfo.members->begin(); memItr != superClassInfo.members->end(); memItr++) {
+          VariableInfo vi = memItr->second;  //unfortunate cant mutate an iterator
+          vi.offset = currentMemberOffset;
+
+          (*currentVariableTable)[memItr->first] = vi;
+          currentMemberOffset += 4;
+          clsinfo.membersSize += vi.size; 
+        }
+      }
+      //questionable
+      if(superClassInfo.methods) {
+        for(auto methodItr = superClassInfo.methods->begin(); methodItr != superClassInfo.methods->end(); methodItr++) {
+          (*currentMethodTable)[methodItr->first] = methodItr->second; // do i even need to do a deep copy?? 
+        }
+      }
+      superClassName = superClassInfo.superClassName;
+    }
+
+  }
+
+  (*classTable)[currentClassName] = clsinfo;
+  node->visit_children(this);
+
+  if(currentClassName == "Main" && !currentVariableTable->empty()) 
+    typeError(main_class_members_present);
+
 }
+
 
 void TypeCheck::visitMethodNode(MethodNode* node) {
   // WRITEME: Replace with code if necessary
+  MethodInfo mi;
+  CompoundType returnType;
+
+  //is going be filled when you visit children
+  mi.variables = new VariableTable();
+  mi.parameters = new std::list<CompoundType>();
+  mi.localsSize = 0;  // how do i update this??? 
+
+  //since methods body begins here we can set up the offset here
+  currentParameterOffset = 12;
+  currentLocalOffset = -4;
+  
+  (*currentMethodTable)[node->identifier->name] = mi;
+
+  node->visit_children(this);
 }
+
+
 
 void TypeCheck::visitMethodBodyNode(MethodBodyNode* node) {
   // WRITEME: Replace with code if necessary
+
 }
 
 void TypeCheck::visitParameterNode(ParameterNode* node) {
