@@ -3,61 +3,73 @@
 
 %{
     #include <cstdlib>
-    #include <cerrno>
-    #include <climits>
-    #include <limits>
-     #include "ast.hpp"
-    #include <iostream>
+    #include <errno.h>
+    #include <limits.h>
+    #include "ast.hpp"
     #include "parser.hpp"
-   
-  
-    using namespace std;
-
-    
-	void yyerror(const char *);
+    void yyerror(const char *);
 %}
 
-%x IN_COMMENT
+DIGIT         [0]|([1-9][0-9]*)
+ID            [A-Za-z][A-Za-z0-9]*
 
+%x comment
 %%
-"/*"              { BEGIN(IN_COMMENT); }
-<IN_COMMENT>"*/"  { BEGIN(INITIAL); }
-<IN_COMMENT>"\n"  { }
-<IN_COMMENT>.     { }
-<IN_COMMENT><<EOF>> {yyerror("incomplete comment");}
+"/*"          BEGIN(comment);
 
-[\t\n]            ; // ignore new line new tab
-" "               ; // ignore spaces
-"extends"         {return T_EXTENDS;}
-"return"          {return T_RETURN;}
-"class"           {return T_CLASS;}
-"print"           {return T_PRINT;}
-"if"              {return T_IF;}
-"else"            {return T_ELSE;}
-"while"           {return T_WHILE;}
-"equals"          {return T_EQUALS;}
-"and"             {return T_AND;}
-"or"              {return T_OR;}
-"not"             {return T_NOT;}           
-"true"            {yylval.base_int = 1; return T_TRUE;}  
-"false"           {yylval.base_int = 0; return T_FALSE;}  
-"new"             {return T_NEW;}  
-"integer"         {return T_INT;} 
-"boolean"         {return T_BOOL;} 
-"none"            {return T_NONE;} 
-"do"              {return T_DO;} 
+<comment>.        /* eat anything that's not a '*' */
+<comment>"\n"   /* eat up '*'s not followed by '/'s */
+<comment>"*/"        BEGIN(INITIAL);
+<comment><<EOF>>        { yyerror("dangling comment"); }
 
-">="              {return T_GTE;} 
-"->"              { return T_FUNC;} 
+  /* WRITEME: Copy your Flex rules from Project 3 here */
+  
+[ \t\n]           ; /*skip whitespace*/
+"boolean"         { return T_BOOL;}
+"integer"         { return T_INT;}
+"none"            { return T_NONE;}
 
+"do"              { return T_DO;}
+"while"           { return T_WHILE;}
+"if"              { return T_IF;}
+"else"            { return T_ELSE;}
+"print"           { return T_PRINT;}
 
-[\(\)\{\}\*]      {return yytext[0];}
-[+-/>.,;=]          {return yytext[0];}
-[0-9]+            { yylval.base_int = atoi(yytext); return T_LITERAL; }
-[a-zA-Z][a-zA-Z0-9]*      {yylval.base_char_ptr = strdup(yytext); return T_ID; }
+"{"               { return T_OPEN_BRACE;}
+"}"               { return T_CLOSED_BRACE;}
 
+"("               { return T_OPEN_PAREN;}
+")"               { return T_CLOSED_PAREN;}
 
+";"               { return T_SEMICOLON;}
+","               { return T_COMMA;}
+"."               { return T_PERIOD;}
+
+"="               { return T_ASSIGN;}
+"or"              { return T_OR;}
+"and"             { return T_AND;}
+">"               { return T_GT;}
+">="              { return T_GTE;}
+"equals"          { return T_EQUALS;}
+"+"               { return T_PLUS;}
+"-"               { return T_MINUS;}
+"*"               { return T_MULT;}
+"/"               { return T_DIV;}
+"not"             { return T_NOT;}
+"new"             { return T_NEW;}
+  /*unary minus?*/
+
+"->"              { return T_ARROW;}
+"return"          { return T_RETURN;}
+"extends"         { return T_EXTEND;}
+
+"true"            { return T_TRUE;}
+"false"           { return T_FALSE;}
+
+{ID}              { yylval.base_char_ptr = strdup(yytext); return T_ID;}
+{DIGIT}           { yylval.base_int = std::atoi(yytext); return T_NUMBER;}
 .                 { yyerror("invalid character"); }
+
 %%
 
 int yywrap(void) {

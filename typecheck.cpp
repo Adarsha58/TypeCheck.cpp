@@ -130,15 +130,17 @@ void TypeCheck::visitClassNode(ClassNode* node) {
   (*classTable)[currentClassName] = clsinfo;
   node->visit_children(this);
 
-
-  for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
-    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); dcl_list++) {
-      (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
-      currentMemberOffset += 4;
+  if(node->declaration_list){
+    for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
+      for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
+        (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
+        currentMemberOffset += 4;
+      }
     }
   }
 
-  if(currentClassName == "Main" && !currentVariableTable->empty()) 
+
+  if(currentClassName == "Main" && !clsinfo.members->empty()) 
     typeError(main_class_members_present);
 
 }
@@ -190,8 +192,9 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
     
     if(!valPoly(classTable, node->methodbody->objectClassName, node->type->objectClassName))
       typeError(return_type_mismatch);
-
   } else if(node->type->basetype != node->methodbody->basetype) {
+    //std::cout << "node->type->basetype: " << node->type->basetype <<std::endl;
+    //std::cout << "node->methodbody->basetype: " << node->methodbody->basetype << std::endl;
     typeError(return_type_mismatch);
   }
 

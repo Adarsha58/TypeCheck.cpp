@@ -29,10 +29,10 @@ ast.o: ast.cpp
 	$(CXX) $(FLAGS) -c -o ast.o ast.cpp
 	
 typecheck.o: typecheck.cpp typecheck.hpp
-	$(CXX) $(FLAGS) -c -o typecheck.o typecheck.cpp
+	$(CXX) $(FLAGS) -g -c -o typecheck.o typecheck.cpp
 
 main.o: main.cpp
-	$(CXX) $(FLAGS) -c -o main.o main.cpp
+	$(CXX) $(FLAGS) -g -c -o main.o main.cpp
 
 .PHONY: run
 run: $(TARGET)

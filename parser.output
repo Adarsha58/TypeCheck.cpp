@@ -1,7 +1,5 @@
 Terminals unused in grammar
 
-    T_CLASS
-    T_UNARY
     T_EOF
 
 
@@ -9,2266 +7,2229 @@ Grammar
 
     0 $accept: Start $end
 
-    1 Start: CLASSES
+    1 Start: Classes
 
-    2 CLASSES: CLASS
-    3        | CLASSES CLASS
+    2 Classes: Classes Class
+    3        | %empty
 
-    4 CLASS: T_ID '{' ClassBody '}'
-    5      | T_ID T_EXTENDS T_ID '{' ClassBody '}'
+    4 Class: T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE
+    5      | T_ID T_EXTEND T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE
 
-    6 TYPE: T_ID
-    7     | T_INT
-    8     | T_BOOL
-    9     | T_NONE
+    6 ClassBody: Members Methods
+    7          | Members
+    8          | Methods
+    9          | %empty
 
-   10 ClassBody: MEMBERS METHODS
-   11          | MEMBERS
-   12          | METHODS
-   13          | %empty
+   10 Members: Members Type T_ID T_SEMICOLON
+   11        | Type T_ID T_SEMICOLON
 
-   14 MEMBERS: MEMBERS TYPE T_ID ';'
-   15        | TYPE T_ID ';'
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
+   13        | T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
-   17        | T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+   14 Body: Declarations Statements Return
+   15     | Declarations Statements
+   16     | Declarations
+   17     | Statements
+   18     | Declarations Return
+   19     | Statements Return
+   20     | Return
+   21     | %empty
 
-   18 BODY: DECLARATIONS STATEMENTS OPT_RETURN
-   19     | DECLARATIONS OPT_RETURN
-   20     | STATEMENTS OPT_RETURN
-   21     | OPT_RETURN
+   22 Type: T_BOOL
+   23     | T_INT
+   24     | T_ID
+   25     | T_NONE
 
-   22 PARAMETERS: PARAMETERLIST
-   23           | %empty
+   26 Declarations: Declarations Declaration T_SEMICOLON
+   27             | Declaration T_SEMICOLON
 
-   24 PARAMETERLIST: TYPE T_ID
-   25              | PARAMETERLIST ',' TYPE T_ID
+   28 Declaration: Declaration T_COMMA T_ID
+   29            | Type T_ID
 
-   26 DECLARATIONS: DECLARATIONS TYPE IDS ';'
-   27             | TYPE IDS ';'
+   30 Statements: Statements Statement
+   31           | Statement
 
-   28 IDS: IDS ',' T_ID
-   29    | T_ID
+   32 Statement: Assignment
+   33          | MethodCall T_SEMICOLON
+   34          | IfElse
+   35          | While
+   36          | DoWhile
+   37          | T_PRINT Expr T_SEMICOLON
 
-   30 STATEMENTS: STATEMENTS STATEMENT
-   31           | STATEMENT
+   38 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE
+   39       | T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-   32 STATEMENT: ASSIGMEMT
-   33          | METHOD_CALL ';'
-   34          | IF_ELSE
-   35          | WHILE_LOOP
-   36          | DO_WHILE
-   37          | PRINT
+   40 While: T_WHILE Expr T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-   38 ASSIGMEMT: T_ID '=' EXPRESSION ';'
-   39          | T_ID '.' T_ID '=' EXPRESSION ';'
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-   40 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}'
-   41        | T_IF EXPRESSION '{' STATEMENTS '}' T_ELSE '{' STATEMENTS '}'
+   42 Assignment: T_ID T_ASSIGN Expr T_SEMICOLON
+   43           | T_ID T_PERIOD T_ID T_ASSIGN Expr T_SEMICOLON
 
-   42 WHILE_LOOP: T_WHILE EXPRESSION '{' STATEMENTS '}'
+   44 Parameter: Parameters
+   45          | %empty
 
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE '(' EXPRESSION ')' ';'
+   46 Parameters: Parameters T_COMMA Type T_ID
+   47           | Type T_ID
 
-   44 PRINT: T_PRINT EXPRESSION ';'
+   48 Return: T_RETURN Expr T_SEMICOLON
 
-   45 EXPRESSION: EXPRESSION '+' EXPRESSION
-   46           | EXPRESSION '-' EXPRESSION
-   47           | EXPRESSION '*' EXPRESSION
-   48           | EXPRESSION '/' EXPRESSION
-   49           | EXPRESSION '>' EXPRESSION
-   50           | EXPRESSION T_GTE EXPRESSION
-   51           | EXPRESSION T_EQUALS EXPRESSION
-   52           | EXPRESSION T_AND EXPRESSION
-   53           | EXPRESSION T_OR EXPRESSION
-   54           | T_NOT EXPRESSION
-   55           | '-' EXPRESSION
-   56           | T_ID
-   57           | T_ID '.' T_ID
-   58           | METHOD_CALL
-   59           | '(' EXPRESSION ')'
-   60           | T_LITERAL
-   61           | T_TRUE
-   62           | T_FALSE
-   63           | T_NEW T_ID
-   64           | T_NEW T_ID '(' ARGUMENTS ')'
+   49 Expr: Expr T_PLUS Expr
+   50     | Expr T_MINUS Expr
+   51     | Expr T_MULT Expr
+   52     | Expr T_DIV Expr
+   53     | Expr T_GT Expr
+   54     | Expr T_GTE Expr
+   55     | Expr T_EQUALS Expr
+   56     | Expr T_AND Expr
+   57     | Expr T_OR Expr
+   58     | T_NOT Expr
+   59     | T_MINUS Expr
+   60     | T_ID
+   61     | T_ID T_PERIOD T_ID
+   62     | MethodCall
+   63     | T_OPEN_PAREN Expr T_CLOSED_PAREN
+   64     | T_NUMBER
+   65     | T_TRUE
+   66     | T_FALSE
+   67     | T_NEW T_ID
+   68     | T_NEW T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-   65 METHOD_CALL: T_ID '(' ARGUMENTS ')'
-   66            | T_ID '.' T_ID '(' ARGUMENTS ')'
+   69 MethodCall: T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
+   70           | T_ID T_PERIOD T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-   67 ARGUMENTS: ARGUMENTLIST
-   68          | %empty
+   71 Argument: Arguments
+   72         | %empty
 
-   69 ARGUMENTLIST: ARGUMENTLIST ',' EXPRESSION
-   70             | EXPRESSION
-
-   71 OPT_RETURN: T_RETURN EXPRESSION ';'
-   72           | %empty
+   73 Arguments: Arguments T_COMMA Expr
+   74          | Expr
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
-    '(' (40) 16 17 43 59 64 65 66
-    ')' (41) 16 17 43 59 64 65 66
-    '*' (42) 47
-    '+' (43) 45
-    ',' (44) 25 28 69
-    '-' (45) 46 55
-    '.' (46) 39 57 66
-    '/' (47) 48
-    ';' (59) 14 15 26 27 33 38 39 43 44 71
-    '=' (61) 38 39
-    '>' (62) 49
-    '{' (123) 4 5 16 17 40 41 42 43
-    '}' (125) 4 5 16 17 40 41 42 43
     error (256)
-    T_CLASS (258)
-    T_PRINT (259) 44
-    T_IF (260) 40 41
-    T_ELSE (261) 41
-    T_RETURN (262) 71
-    T_NEW (263) 63 64
-    T_WHILE (264) 42 43
-    T_DO (265) 43
-    T_EXTENDS (266) 5
-    T_FUNC (267) 16 17
-    T_INT (268) 7
-    T_BOOL (269) 8
-    T_NONE (270) 9
-    T_ID <base_char_ptr> (271) 4 5 6 14 15 16 17 24 25 28 29 38 39 56 57 63 64 65 66
-    T_LITERAL <base_int> (272) 60
-    T_GTE (273) 50
-    T_EQUALS (274) 51
-    T_UNARY (275)
-    T_AND (276) 52
-    T_OR (277) 53
-    T_NOT (278) 54
-    T_TRUE <base_int> (279) 61
-    T_FALSE <base_int> (280) 62
-    T_EOF (281)
+    T_BOOL (258) 22
+    T_INT (259) 23
+    T_NONE (260) 25
+    T_DO (261) 41
+    T_WHILE (262) 40 41
+    T_IF (263) 38 39
+    T_ELSE (264) 39
+    T_ID <base_char_ptr> (265) 4 5 10 11 12 13 24 28 29 42 43 46 47 60 61 67 68 69 70
+    T_NUMBER <base_int> (266) 64
+    T_NEW (267) 67 68
+    T_ARROW (268) 12 13
+    T_TRUE (269) 65
+    T_FALSE (270) 66
+    T_OR (271) 57
+    T_AND (272) 56
+    T_GT (273) 53
+    T_GTE (274) 54
+    T_EQUALS (275) 55
+    T_OPEN_BRACE (276) 4 5 12 13 38 39 40 41
+    T_CLOSED_BRACE (277) 4 5 12 13 38 39 40 41
+    T_OPEN_PAREN (278) 12 13 41 63 68 69 70
+    T_CLOSED_PAREN (279) 12 13 41 63 68 69 70
+    T_MULT (280) 51
+    T_DIV (281) 52
+    T_PLUS (282) 49
+    T_MINUS (283) 50 59
+    T_NOT (284) 58
+    T_ASSIGN (285) 42 43
+    T_PRINT (286) 37
+    T_COMMA (287) 28 46 73
+    T_PERIOD (288) 43 61 70
+    T_SEMICOLON (289) 10 11 26 27 33 37 41 42 43 48
+    T_RETURN (290) 48
+    T_EXTEND (291) 5
+    T_EOF (292)
 
 
 Nonterminals, with rules where they appear
 
-    $accept (40)
+    $accept (38)
         on left: 0
-    Start <program_ptr> (41)
+    Start <program_ptr> (39)
         on left: 1
         on right: 0
-    CLASSES <class_list_ptr> (42)
+    Classes <class_list_ptr> (40)
         on left: 2 3
-        on right: 1 3
-    CLASS <class_ptr> (43)
+        on right: 1 2
+    Class <class_ptr> (41)
         on left: 4 5
-        on right: 2 3
-    TYPE <type_ptr> (44)
+        on right: 2
+    ClassBody <class_ptr> (42)
         on left: 6 7 8 9
-        on right: 14 15 16 17 24 25 26 27
-    ClassBody <class_ptr> (45)
-        on left: 10 11 12 13
         on right: 4 5
-    MEMBERS <declaration_list_ptr> (46)
-        on left: 14 15
-        on right: 10 11 14
-    METHODS <method_list_ptr> (47)
-        on left: 16 17
-        on right: 10 12 16
-    BODY <methodbody_ptr> (48)
-        on left: 18 19 20 21
-        on right: 16 17
-    PARAMETERS <parameter_list_ptr> (49)
-        on left: 22 23
-        on right: 16 17
-    PARAMETERLIST <parameter_list_ptr> (50)
-        on left: 24 25
-        on right: 22 25
-    DECLARATIONS <declaration_list_ptr> (51)
+    Members <declaration_list_ptr> (43)
+        on left: 10 11
+        on right: 6 7 10
+    Methods <method_list_ptr> (44)
+        on left: 12 13
+        on right: 6 8 12
+    Body <methodbody_ptr> (45)
+        on left: 14 15 16 17 18 19 20 21
+        on right: 12 13
+    Type <type_ptr> (46)
+        on left: 22 23 24 25
+        on right: 10 11 12 13 29 46 47
+    Declarations <declaration_list_ptr> (47)
         on left: 26 27
-        on right: 18 19 26
-    IDS <identifier_list_ptr> (52)
+        on right: 14 15 16 18 26
+    Declaration <declaration_ptr> (48)
         on left: 28 29
         on right: 26 27 28
-    STATEMENTS <statement_list_ptr> (53)
+    Statements <statement_list_ptr> (49)
         on left: 30 31
-        on right: 18 20 30 40 41 42 43
-    STATEMENT <statement_ptr> (54)
+        on right: 14 15 17 19 30 38 39 40 41
+    Statement <statement_ptr> (50)
         on left: 32 33 34 35 36 37
         on right: 30 31
-    ASSIGMEMT <assignment_ptr> (55)
+    IfElse <ifelse_ptr> (51)
         on left: 38 39
-        on right: 32
-    IF_ELSE <ifelse_ptr> (56)
-        on left: 40 41
         on right: 34
-    WHILE_LOOP <while_ptr> (57)
-        on left: 42
+    While <while_ptr> (52)
+        on left: 40
         on right: 35
-    DO_WHILE <dowhile_ptr> (58)
-        on left: 43
+    DoWhile <dowhile_ptr> (53)
+        on left: 41
         on right: 36
-    PRINT <print_ptr> (59)
-        on left: 44
-        on right: 37
-    EXPRESSION <expression_ptr> (60)
-        on left: 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64
-        on right: 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 59 69 70 71
-    METHOD_CALL <methodcall_ptr> (61)
-        on left: 65 66
-        on right: 33 58
-    ARGUMENTS <expression_list_ptr> (62)
-        on left: 67 68
-        on right: 64 65 66
-    ARGUMENTLIST <expression_list_ptr> (63)
+    Assignment <assignment_ptr> (54)
+        on left: 42 43
+        on right: 32
+    Parameter <parameter_list_ptr> (55)
+        on left: 44 45
+        on right: 12 13
+    Parameters <parameter_list_ptr> (56)
+        on left: 46 47
+        on right: 44 46
+    Return <returnstatement_ptr> (57)
+        on left: 48
+        on right: 14 18 19 20
+    Expr <expression_ptr> (58)
+        on left: 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68
+        on right: 37 38 39 40 41 42 43 48 49 50 51 52 53 54 55 56 57 58 59 63 73 74
+    MethodCall <methodcall_ptr> (59)
         on left: 69 70
-        on right: 67 69
-    OPT_RETURN <returnstatement_ptr> (64)
+        on right: 33 62
+    Argument <expression_list_ptr> (60)
         on left: 71 72
-        on right: 18 19 20 21
+        on right: 68 69 70
+    Arguments <expression_list_ptr> (61)
+        on left: 73 74
+        on right: 71 73
 
 
 State 0
 
     0 $accept: . Start $end
 
-    T_ID  shift, and go to state 1
+    $default  reduce using rule 3 (Classes)
 
-    Start    go to state 2
-    CLASSES  go to state 3
-    CLASS    go to state 4
+    Start    go to state 1
+    Classes  go to state 2
 
 
 State 1
 
-    4 CLASS: T_ID . '{' ClassBody '}'
-    5      | T_ID . T_EXTENDS T_ID '{' ClassBody '}'
+    0 $accept: Start . $end
 
-    T_EXTENDS  shift, and go to state 5
-    '{'        shift, and go to state 6
+    $end  shift, and go to state 3
 
 
 State 2
 
-    0 $accept: Start . $end
+    1 Start: Classes .
+    2 Classes: Classes . Class
 
-    $end  shift, and go to state 7
-
-
-State 3
-
-    1 Start: CLASSES .
-    3 CLASSES: CLASSES . CLASS
-
-    T_ID  shift, and go to state 1
+    T_ID  shift, and go to state 4
 
     $default  reduce using rule 1 (Start)
 
-    CLASS  go to state 8
+    Class  go to state 5
 
 
-State 4
-
-    2 CLASSES: CLASS .
-
-    $default  reduce using rule 2 (CLASSES)
-
-
-State 5
-
-    5 CLASS: T_ID T_EXTENDS . T_ID '{' ClassBody '}'
-
-    T_ID  shift, and go to state 9
-
-
-State 6
-
-    4 CLASS: T_ID '{' . ClassBody '}'
-
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 13
-
-    $default  reduce using rule 13 (ClassBody)
-
-    TYPE       go to state 14
-    ClassBody  go to state 15
-    MEMBERS    go to state 16
-    METHODS    go to state 17
-
-
-State 7
+State 3
 
     0 $accept: Start $end .
 
     $default  accept
 
 
+State 4
+
+    4 Class: T_ID . T_OPEN_BRACE ClassBody T_CLOSED_BRACE
+    5      | T_ID . T_EXTEND T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE
+
+    T_OPEN_BRACE  shift, and go to state 6
+    T_EXTEND      shift, and go to state 7
+
+
+State 5
+
+    2 Classes: Classes Class .
+
+    $default  reduce using rule 2 (Classes)
+
+
+State 6
+
+    4 Class: T_ID T_OPEN_BRACE . ClassBody T_CLOSED_BRACE
+
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 11
+
+    $default  reduce using rule 9 (ClassBody)
+
+    ClassBody  go to state 12
+    Members    go to state 13
+    Methods    go to state 14
+    Type       go to state 15
+
+
+State 7
+
+    5 Class: T_ID T_EXTEND . T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE
+
+    T_ID  shift, and go to state 16
+
+
 State 8
 
-    3 CLASSES: CLASSES CLASS .
+   22 Type: T_BOOL .
 
-    $default  reduce using rule 3 (CLASSES)
+    $default  reduce using rule 22 (Type)
 
 
 State 9
 
-    5 CLASS: T_ID T_EXTENDS T_ID . '{' ClassBody '}'
+   23 Type: T_INT .
 
-    '{'  shift, and go to state 18
+    $default  reduce using rule 23 (Type)
 
 
 State 10
 
-    7 TYPE: T_INT .
+   25 Type: T_NONE .
 
-    $default  reduce using rule 7 (TYPE)
+    $default  reduce using rule 25 (Type)
 
 
 State 11
 
-    8 TYPE: T_BOOL .
+   13 Methods: T_ID . T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
+   24 Type: T_ID .
 
-    $default  reduce using rule 8 (TYPE)
+    T_OPEN_PAREN  shift, and go to state 17
+
+    $default  reduce using rule 24 (Type)
 
 
 State 12
 
-    9 TYPE: T_NONE .
+    4 Class: T_ID T_OPEN_BRACE ClassBody . T_CLOSED_BRACE
 
-    $default  reduce using rule 9 (TYPE)
+    T_CLOSED_BRACE  shift, and go to state 18
 
 
 State 13
 
-    6 TYPE: T_ID .
-   17 METHODS: T_ID . '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+    6 ClassBody: Members . Methods
+    7          | Members .
+   10 Members: Members . Type T_ID T_SEMICOLON
 
-    '('  shift, and go to state 19
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 11
 
-    $default  reduce using rule 6 (TYPE)
+    $default  reduce using rule 7 (ClassBody)
+
+    Methods  go to state 19
+    Type     go to state 20
 
 
 State 14
 
-   15 MEMBERS: TYPE . T_ID ';'
+    8 ClassBody: Methods .
+   12 Methods: Methods . T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_ID  shift, and go to state 20
+    T_ID  shift, and go to state 21
+
+    $default  reduce using rule 8 (ClassBody)
 
 
 State 15
 
-    4 CLASS: T_ID '{' ClassBody . '}'
+   11 Members: Type . T_ID T_SEMICOLON
 
-    '}'  shift, and go to state 21
+    T_ID  shift, and go to state 22
 
 
 State 16
 
-   10 ClassBody: MEMBERS . METHODS
-   11          | MEMBERS .
-   14 MEMBERS: MEMBERS . TYPE T_ID ';'
+    5 Class: T_ID T_EXTEND T_ID . T_OPEN_BRACE ClassBody T_CLOSED_BRACE
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 13
-
-    $default  reduce using rule 11 (ClassBody)
-
-    TYPE     go to state 22
-    METHODS  go to state 23
+    T_OPEN_BRACE  shift, and go to state 23
 
 
 State 17
 
-   12 ClassBody: METHODS .
-   16 METHODS: METHODS . T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+   13 Methods: T_ID T_OPEN_PAREN . Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_ID  shift, and go to state 24
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 24
 
-    $default  reduce using rule 12 (ClassBody)
+    $default  reduce using rule 45 (Parameter)
+
+    Type        go to state 25
+    Parameter   go to state 26
+    Parameters  go to state 27
 
 
 State 18
 
-    5 CLASS: T_ID T_EXTENDS T_ID '{' . ClassBody '}'
+    4 Class: T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE .
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 13
-
-    $default  reduce using rule 13 (ClassBody)
-
-    TYPE       go to state 14
-    ClassBody  go to state 25
-    MEMBERS    go to state 16
-    METHODS    go to state 17
+    $default  reduce using rule 4 (Class)
 
 
 State 19
 
-   17 METHODS: T_ID '(' . PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+    6 ClassBody: Members Methods .
+   12 Methods: Methods . T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 26
+    T_ID  shift, and go to state 21
 
-    $default  reduce using rule 23 (PARAMETERS)
-
-    TYPE           go to state 27
-    PARAMETERS     go to state 28
-    PARAMETERLIST  go to state 29
+    $default  reduce using rule 6 (ClassBody)
 
 
 State 20
 
-   15 MEMBERS: TYPE T_ID . ';'
+   10 Members: Members Type . T_ID T_SEMICOLON
 
-    ';'  shift, and go to state 30
+    T_ID  shift, and go to state 28
 
 
 State 21
 
-    4 CLASS: T_ID '{' ClassBody '}' .
+   12 Methods: Methods T_ID . T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    $default  reduce using rule 4 (CLASS)
+    T_OPEN_PAREN  shift, and go to state 29
 
 
 State 22
 
-   14 MEMBERS: MEMBERS TYPE . T_ID ';'
+   11 Members: Type T_ID . T_SEMICOLON
 
-    T_ID  shift, and go to state 31
+    T_SEMICOLON  shift, and go to state 30
 
 
 State 23
 
-   10 ClassBody: MEMBERS METHODS .
-   16 METHODS: METHODS . T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+    5 Class: T_ID T_EXTEND T_ID T_OPEN_BRACE . ClassBody T_CLOSED_BRACE
 
-    T_ID  shift, and go to state 24
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 11
 
-    $default  reduce using rule 10 (ClassBody)
+    $default  reduce using rule 9 (ClassBody)
+
+    ClassBody  go to state 31
+    Members    go to state 13
+    Methods    go to state 14
+    Type       go to state 15
 
 
 State 24
 
-   16 METHODS: METHODS T_ID . '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+   24 Type: T_ID .
 
-    '('  shift, and go to state 32
+    $default  reduce using rule 24 (Type)
 
 
 State 25
 
-    5 CLASS: T_ID T_EXTENDS T_ID '{' ClassBody . '}'
+   47 Parameters: Type . T_ID
 
-    '}'  shift, and go to state 33
+    T_ID  shift, and go to state 32
 
 
 State 26
 
-    6 TYPE: T_ID .
+   13 Methods: T_ID T_OPEN_PAREN Parameter . T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    $default  reduce using rule 6 (TYPE)
+    T_CLOSED_PAREN  shift, and go to state 33
 
 
 State 27
 
-   24 PARAMETERLIST: TYPE . T_ID
+   44 Parameter: Parameters .
+   46 Parameters: Parameters . T_COMMA Type T_ID
 
-    T_ID  shift, and go to state 34
+    T_COMMA  shift, and go to state 34
+
+    $default  reduce using rule 44 (Parameter)
 
 
 State 28
 
-   17 METHODS: T_ID '(' PARAMETERS . ')' T_FUNC TYPE '{' BODY '}'
+   10 Members: Members Type T_ID . T_SEMICOLON
 
-    ')'  shift, and go to state 35
+    T_SEMICOLON  shift, and go to state 35
 
 
 State 29
 
-   22 PARAMETERS: PARAMETERLIST .
-   25 PARAMETERLIST: PARAMETERLIST . ',' TYPE T_ID
+   12 Methods: Methods T_ID T_OPEN_PAREN . Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    ','  shift, and go to state 36
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 24
 
-    $default  reduce using rule 22 (PARAMETERS)
+    $default  reduce using rule 45 (Parameter)
+
+    Type        go to state 25
+    Parameter   go to state 36
+    Parameters  go to state 27
 
 
 State 30
 
-   15 MEMBERS: TYPE T_ID ';' .
+   11 Members: Type T_ID T_SEMICOLON .
 
-    $default  reduce using rule 15 (MEMBERS)
+    $default  reduce using rule 11 (Members)
 
 
 State 31
 
-   14 MEMBERS: MEMBERS TYPE T_ID . ';'
+    5 Class: T_ID T_EXTEND T_ID T_OPEN_BRACE ClassBody . T_CLOSED_BRACE
 
-    ';'  shift, and go to state 37
+    T_CLOSED_BRACE  shift, and go to state 37
 
 
 State 32
 
-   16 METHODS: METHODS T_ID '(' . PARAMETERS ')' T_FUNC TYPE '{' BODY '}'
+   47 Parameters: Type T_ID .
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 26
-
-    $default  reduce using rule 23 (PARAMETERS)
-
-    TYPE           go to state 27
-    PARAMETERS     go to state 38
-    PARAMETERLIST  go to state 29
+    $default  reduce using rule 47 (Parameters)
 
 
 State 33
 
-    5 CLASS: T_ID T_EXTENDS T_ID '{' ClassBody '}' .
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN . T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    $default  reduce using rule 5 (CLASS)
+    T_ARROW  shift, and go to state 38
 
 
 State 34
 
-   24 PARAMETERLIST: TYPE T_ID .
+   46 Parameters: Parameters T_COMMA . Type T_ID
 
-    $default  reduce using rule 24 (PARAMETERLIST)
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 24
+
+    Type  go to state 39
 
 
 State 35
 
-   17 METHODS: T_ID '(' PARAMETERS ')' . T_FUNC TYPE '{' BODY '}'
+   10 Members: Members Type T_ID T_SEMICOLON .
 
-    T_FUNC  shift, and go to state 39
+    $default  reduce using rule 10 (Members)
 
 
 State 36
 
-   25 PARAMETERLIST: PARAMETERLIST ',' . TYPE T_ID
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter . T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 26
-
-    TYPE  go to state 40
+    T_CLOSED_PAREN  shift, and go to state 40
 
 
 State 37
 
-   14 MEMBERS: MEMBERS TYPE T_ID ';' .
+    5 Class: T_ID T_EXTEND T_ID T_OPEN_BRACE ClassBody T_CLOSED_BRACE .
 
-    $default  reduce using rule 14 (MEMBERS)
+    $default  reduce using rule 5 (Class)
 
 
 State 38
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS . ')' T_FUNC TYPE '{' BODY '}'
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW . Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    ')'  shift, and go to state 41
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 24
+
+    Type  go to state 41
 
 
 State 39
 
-   17 METHODS: T_ID '(' PARAMETERS ')' T_FUNC . TYPE '{' BODY '}'
+   46 Parameters: Parameters T_COMMA Type . T_ID
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 26
-
-    TYPE  go to state 42
+    T_ID  shift, and go to state 42
 
 
 State 40
 
-   25 PARAMETERLIST: PARAMETERLIST ',' TYPE . T_ID
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN . T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_ID  shift, and go to state 43
+    T_ARROW  shift, and go to state 43
 
 
 State 41
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' . T_FUNC TYPE '{' BODY '}'
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type . T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_FUNC  shift, and go to state 44
+    T_OPEN_BRACE  shift, and go to state 44
 
 
 State 42
 
-   17 METHODS: T_ID '(' PARAMETERS ')' T_FUNC TYPE . '{' BODY '}'
+   46 Parameters: Parameters T_COMMA Type T_ID .
 
-    '{'  shift, and go to state 45
+    $default  reduce using rule 46 (Parameters)
 
 
 State 43
 
-   25 PARAMETERLIST: PARAMETERLIST ',' TYPE T_ID .
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW . Type T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    $default  reduce using rule 25 (PARAMETERLIST)
+    T_BOOL  shift, and go to state 8
+    T_INT   shift, and go to state 9
+    T_NONE  shift, and go to state 10
+    T_ID    shift, and go to state 24
+
+    Type  go to state 45
 
 
 State 44
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC . TYPE '{' BODY '}'
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE . Body T_CLOSED_BRACE
 
-    T_INT   shift, and go to state 10
-    T_BOOL  shift, and go to state 11
-    T_NONE  shift, and go to state 12
-    T_ID    shift, and go to state 26
+    T_BOOL    shift, and go to state 8
+    T_INT     shift, and go to state 9
+    T_NONE    shift, and go to state 10
+    T_DO      shift, and go to state 46
+    T_WHILE   shift, and go to state 47
+    T_IF      shift, and go to state 48
+    T_ID      shift, and go to state 49
+    T_PRINT   shift, and go to state 50
+    T_RETURN  shift, and go to state 51
 
-    TYPE  go to state 46
+    $default  reduce using rule 21 (Body)
+
+    Body          go to state 52
+    Type          go to state 53
+    Declarations  go to state 54
+    Declaration   go to state 55
+    Statements    go to state 56
+    Statement     go to state 57
+    IfElse        go to state 58
+    While         go to state 59
+    DoWhile       go to state 60
+    Assignment    go to state 61
+    Return        go to state 62
+    MethodCall    go to state 63
 
 
 State 45
 
-   17 METHODS: T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' . BODY '}'
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type . T_OPEN_BRACE Body T_CLOSED_BRACE
 
-    T_PRINT   shift, and go to state 47
-    T_IF      shift, and go to state 48
-    T_RETURN  shift, and go to state 49
-    T_WHILE   shift, and go to state 50
-    T_DO      shift, and go to state 51
-    T_INT     shift, and go to state 10
-    T_BOOL    shift, and go to state 11
-    T_NONE    shift, and go to state 12
-    T_ID      shift, and go to state 52
-
-    $default  reduce using rule 72 (OPT_RETURN)
-
-    TYPE          go to state 53
-    BODY          go to state 54
-    DECLARATIONS  go to state 55
-    STATEMENTS    go to state 56
-    STATEMENT     go to state 57
-    ASSIGMEMT     go to state 58
-    IF_ELSE       go to state 59
-    WHILE_LOOP    go to state 60
-    DO_WHILE      go to state 61
-    PRINT         go to state 62
-    METHOD_CALL   go to state 63
-    OPT_RETURN    go to state 64
+    T_OPEN_BRACE  shift, and go to state 64
 
 
 State 46
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC TYPE . '{' BODY '}'
+   41 DoWhile: T_DO . T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-    '{'  shift, and go to state 65
+    T_OPEN_BRACE  shift, and go to state 65
 
 
 State 47
 
-   44 PRINT: T_PRINT . EXPRESSION ';'
+   40 While: T_WHILE . Expr T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 74
-    METHOD_CALL  go to state 75
+    Expr        go to state 74
+    MethodCall  go to state 75
 
 
 State 48
 
-   40 IF_ELSE: T_IF . EXPRESSION '{' STATEMENTS '}'
-   41        | T_IF . EXPRESSION '{' STATEMENTS '}' T_ELSE '{' STATEMENTS '}'
+   38 IfElse: T_IF . Expr T_OPEN_BRACE Statements T_CLOSED_BRACE
+   39       | T_IF . Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 76
-    METHOD_CALL  go to state 75
+    Expr        go to state 76
+    MethodCall  go to state 75
 
 
 State 49
 
-   71 OPT_RETURN: T_RETURN . EXPRESSION ';'
+   24 Type: T_ID .
+   42 Assignment: T_ID . T_ASSIGN Expr T_SEMICOLON
+   43           | T_ID . T_PERIOD T_ID T_ASSIGN Expr T_SEMICOLON
+   69 MethodCall: T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
+   70           | T_ID . T_PERIOD T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_OPEN_PAREN  shift, and go to state 77
+    T_ASSIGN      shift, and go to state 78
+    T_PERIOD      shift, and go to state 79
 
-    EXPRESSION   go to state 77
-    METHOD_CALL  go to state 75
+    $default  reduce using rule 24 (Type)
 
 
 State 50
 
-   42 WHILE_LOOP: T_WHILE . EXPRESSION '{' STATEMENTS '}'
+   37 Statement: T_PRINT . Expr T_SEMICOLON
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 78
-    METHOD_CALL  go to state 75
+    Expr        go to state 80
+    MethodCall  go to state 75
 
 
 State 51
 
-   43 DO_WHILE: T_DO . '{' STATEMENTS '}' T_WHILE '(' EXPRESSION ')' ';'
+   48 Return: T_RETURN . Expr T_SEMICOLON
 
-    '{'  shift, and go to state 79
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    Expr        go to state 81
+    MethodCall  go to state 75
 
 
 State 52
 
-    6 TYPE: T_ID .
-   38 ASSIGMEMT: T_ID . '=' EXPRESSION ';'
-   39          | T_ID . '.' T_ID '=' EXPRESSION ';'
-   65 METHOD_CALL: T_ID . '(' ARGUMENTS ')'
-   66            | T_ID . '.' T_ID '(' ARGUMENTS ')'
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body . T_CLOSED_BRACE
 
-    '('  shift, and go to state 80
-    '='  shift, and go to state 81
-    '.'  shift, and go to state 82
-
-    $default  reduce using rule 6 (TYPE)
+    T_CLOSED_BRACE  shift, and go to state 82
 
 
 State 53
 
-   27 DECLARATIONS: TYPE . IDS ';'
+   29 Declaration: Type . T_ID
 
     T_ID  shift, and go to state 83
-
-    IDS  go to state 84
 
 
 State 54
 
-   17 METHODS: T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY . '}'
+   14 Body: Declarations . Statements Return
+   15     | Declarations . Statements
+   16     | Declarations .
+   18     | Declarations . Return
+   26 Declarations: Declarations . Declaration T_SEMICOLON
 
-    '}'  shift, and go to state 85
+    T_BOOL    shift, and go to state 8
+    T_INT     shift, and go to state 9
+    T_NONE    shift, and go to state 10
+    T_DO      shift, and go to state 46
+    T_WHILE   shift, and go to state 47
+    T_IF      shift, and go to state 48
+    T_ID      shift, and go to state 49
+    T_PRINT   shift, and go to state 50
+    T_RETURN  shift, and go to state 51
+
+    $default  reduce using rule 16 (Body)
+
+    Type         go to state 53
+    Declaration  go to state 84
+    Statements   go to state 85
+    Statement    go to state 57
+    IfElse       go to state 58
+    While        go to state 59
+    DoWhile      go to state 60
+    Assignment   go to state 61
+    Return       go to state 86
+    MethodCall   go to state 63
 
 
 State 55
 
-   18 BODY: DECLARATIONS . STATEMENTS OPT_RETURN
-   19     | DECLARATIONS . OPT_RETURN
-   26 DECLARATIONS: DECLARATIONS . TYPE IDS ';'
+   27 Declarations: Declaration . T_SEMICOLON
+   28 Declaration: Declaration . T_COMMA T_ID
 
-    T_PRINT   shift, and go to state 47
-    T_IF      shift, and go to state 48
-    T_RETURN  shift, and go to state 49
-    T_WHILE   shift, and go to state 50
-    T_DO      shift, and go to state 51
-    T_INT     shift, and go to state 10
-    T_BOOL    shift, and go to state 11
-    T_NONE    shift, and go to state 12
-    T_ID      shift, and go to state 52
-
-    $default  reduce using rule 72 (OPT_RETURN)
-
-    TYPE         go to state 86
-    STATEMENTS   go to state 87
-    STATEMENT    go to state 57
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
-    OPT_RETURN   go to state 88
+    T_COMMA      shift, and go to state 87
+    T_SEMICOLON  shift, and go to state 88
 
 
 State 56
 
-   20 BODY: STATEMENTS . OPT_RETURN
-   30 STATEMENTS: STATEMENTS . STATEMENT
+   17 Body: Statements .
+   19     | Statements . Return
+   30 Statements: Statements . Statement
 
-    T_PRINT   shift, and go to state 47
+    T_DO      shift, and go to state 46
+    T_WHILE   shift, and go to state 47
     T_IF      shift, and go to state 48
-    T_RETURN  shift, and go to state 49
-    T_WHILE   shift, and go to state 50
-    T_DO      shift, and go to state 51
     T_ID      shift, and go to state 89
+    T_PRINT   shift, and go to state 50
+    T_RETURN  shift, and go to state 51
 
-    $default  reduce using rule 72 (OPT_RETURN)
+    $default  reduce using rule 17 (Body)
 
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
-    OPT_RETURN   go to state 91
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    Return      go to state 91
+    MethodCall  go to state 63
 
 
 State 57
 
-   31 STATEMENTS: STATEMENT .
+   31 Statements: Statement .
 
-    $default  reduce using rule 31 (STATEMENTS)
+    $default  reduce using rule 31 (Statements)
 
 
 State 58
 
-   32 STATEMENT: ASSIGMEMT .
+   34 Statement: IfElse .
 
-    $default  reduce using rule 32 (STATEMENT)
+    $default  reduce using rule 34 (Statement)
 
 
 State 59
 
-   34 STATEMENT: IF_ELSE .
+   35 Statement: While .
 
-    $default  reduce using rule 34 (STATEMENT)
+    $default  reduce using rule 35 (Statement)
 
 
 State 60
 
-   35 STATEMENT: WHILE_LOOP .
+   36 Statement: DoWhile .
 
-    $default  reduce using rule 35 (STATEMENT)
+    $default  reduce using rule 36 (Statement)
 
 
 State 61
 
-   36 STATEMENT: DO_WHILE .
+   32 Statement: Assignment .
 
-    $default  reduce using rule 36 (STATEMENT)
+    $default  reduce using rule 32 (Statement)
 
 
 State 62
 
-   37 STATEMENT: PRINT .
+   20 Body: Return .
 
-    $default  reduce using rule 37 (STATEMENT)
+    $default  reduce using rule 20 (Body)
 
 
 State 63
 
-   33 STATEMENT: METHOD_CALL . ';'
+   33 Statement: MethodCall . T_SEMICOLON
 
-    ';'  shift, and go to state 92
+    T_SEMICOLON  shift, and go to state 92
 
 
 State 64
 
-   21 BODY: OPT_RETURN .
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE . Body T_CLOSED_BRACE
 
-    $default  reduce using rule 21 (BODY)
+    T_BOOL    shift, and go to state 8
+    T_INT     shift, and go to state 9
+    T_NONE    shift, and go to state 10
+    T_DO      shift, and go to state 46
+    T_WHILE   shift, and go to state 47
+    T_IF      shift, and go to state 48
+    T_ID      shift, and go to state 49
+    T_PRINT   shift, and go to state 50
+    T_RETURN  shift, and go to state 51
+
+    $default  reduce using rule 21 (Body)
+
+    Body          go to state 93
+    Type          go to state 53
+    Declarations  go to state 54
+    Declaration   go to state 55
+    Statements    go to state 56
+    Statement     go to state 57
+    IfElse        go to state 58
+    While         go to state 59
+    DoWhile       go to state 60
+    Assignment    go to state 61
+    Return        go to state 62
+    MethodCall    go to state 63
 
 
 State 65
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' . BODY '}'
+   41 DoWhile: T_DO T_OPEN_BRACE . Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-    T_PRINT   shift, and go to state 47
-    T_IF      shift, and go to state 48
-    T_RETURN  shift, and go to state 49
-    T_WHILE   shift, and go to state 50
-    T_DO      shift, and go to state 51
-    T_INT     shift, and go to state 10
-    T_BOOL    shift, and go to state 11
-    T_NONE    shift, and go to state 12
-    T_ID      shift, and go to state 52
+    T_DO     shift, and go to state 46
+    T_WHILE  shift, and go to state 47
+    T_IF     shift, and go to state 48
+    T_ID     shift, and go to state 89
+    T_PRINT  shift, and go to state 50
 
-    $default  reduce using rule 72 (OPT_RETURN)
-
-    TYPE          go to state 53
-    BODY          go to state 93
-    DECLARATIONS  go to state 55
-    STATEMENTS    go to state 56
-    STATEMENT     go to state 57
-    ASSIGMEMT     go to state 58
-    IF_ELSE       go to state 59
-    WHILE_LOOP    go to state 60
-    DO_WHILE      go to state 61
-    PRINT         go to state 62
-    METHOD_CALL   go to state 63
-    OPT_RETURN    go to state 64
+    Statements  go to state 94
+    Statement   go to state 57
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 66
 
-   63 EXPRESSION: T_NEW . T_ID
-   64           | T_NEW . T_ID '(' ARGUMENTS ')'
+   60 Expr: T_ID .
+   61     | T_ID . T_PERIOD T_ID
+   69 MethodCall: T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
+   70           | T_ID . T_PERIOD T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    T_ID  shift, and go to state 94
+    T_OPEN_PAREN  shift, and go to state 77
+    T_PERIOD      shift, and go to state 95
+
+    $default  reduce using rule 60 (Expr)
 
 
 State 67
 
-   56 EXPRESSION: T_ID .
-   57           | T_ID . '.' T_ID
-   65 METHOD_CALL: T_ID . '(' ARGUMENTS ')'
-   66            | T_ID . '.' T_ID '(' ARGUMENTS ')'
+   64 Expr: T_NUMBER .
 
-    '('  shift, and go to state 80
-    '.'  shift, and go to state 95
-
-    $default  reduce using rule 56 (EXPRESSION)
+    $default  reduce using rule 64 (Expr)
 
 
 State 68
 
-   60 EXPRESSION: T_LITERAL .
+   67 Expr: T_NEW . T_ID
+   68     | T_NEW . T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    $default  reduce using rule 60 (EXPRESSION)
+    T_ID  shift, and go to state 96
 
 
 State 69
 
-   54 EXPRESSION: T_NOT . EXPRESSION
+   65 Expr: T_TRUE .
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 96
-    METHOD_CALL  go to state 75
+    $default  reduce using rule 65 (Expr)
 
 
 State 70
 
-   61 EXPRESSION: T_TRUE .
+   66 Expr: T_FALSE .
 
-    $default  reduce using rule 61 (EXPRESSION)
+    $default  reduce using rule 66 (Expr)
 
 
 State 71
 
-   62 EXPRESSION: T_FALSE .
+   63 Expr: T_OPEN_PAREN . Expr T_CLOSED_PAREN
 
-    $default  reduce using rule 62 (EXPRESSION)
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    Expr        go to state 97
+    MethodCall  go to state 75
 
 
 State 72
 
-   55 EXPRESSION: '-' . EXPRESSION
+   59 Expr: T_MINUS . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 97
-    METHOD_CALL  go to state 75
+    Expr        go to state 98
+    MethodCall  go to state 75
 
 
 State 73
 
-   59 EXPRESSION: '(' . EXPRESSION ')'
+   58 Expr: T_NOT . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 98
-    METHOD_CALL  go to state 75
+    Expr        go to state 99
+    MethodCall  go to state 75
 
 
 State 74
 
-   44 PRINT: T_PRINT EXPRESSION . ';'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   40 While: T_WHILE Expr . T_OPEN_BRACE Statements T_CLOSED_BRACE
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ';'       shift, and go to state 108
+    T_OR          shift, and go to state 100
+    T_AND         shift, and go to state 101
+    T_GT          shift, and go to state 102
+    T_GTE         shift, and go to state 103
+    T_EQUALS      shift, and go to state 104
+    T_OPEN_BRACE  shift, and go to state 105
+    T_MULT        shift, and go to state 106
+    T_DIV         shift, and go to state 107
+    T_PLUS        shift, and go to state 108
+    T_MINUS       shift, and go to state 109
 
 
 State 75
 
-   58 EXPRESSION: METHOD_CALL .
+   62 Expr: MethodCall .
 
-    $default  reduce using rule 58 (EXPRESSION)
+    $default  reduce using rule 62 (Expr)
 
 
 State 76
 
-   40 IF_ELSE: T_IF EXPRESSION . '{' STATEMENTS '}'
-   41        | T_IF EXPRESSION . '{' STATEMENTS '}' T_ELSE '{' STATEMENTS '}'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   38 IfElse: T_IF Expr . T_OPEN_BRACE Statements T_CLOSED_BRACE
+   39       | T_IF Expr . T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    '{'       shift, and go to state 109
+    T_OR          shift, and go to state 100
+    T_AND         shift, and go to state 101
+    T_GT          shift, and go to state 102
+    T_GTE         shift, and go to state 103
+    T_EQUALS      shift, and go to state 104
+    T_OPEN_BRACE  shift, and go to state 110
+    T_MULT        shift, and go to state 106
+    T_DIV         shift, and go to state 107
+    T_PLUS        shift, and go to state 108
+    T_MINUS       shift, and go to state 109
 
 
 State 77
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   71 OPT_RETURN: T_RETURN EXPRESSION . ';'
+   69 MethodCall: T_ID T_OPEN_PAREN . Argument T_CLOSED_PAREN
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ';'       shift, and go to state 110
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    $default  reduce using rule 72 (Argument)
+
+    Expr        go to state 111
+    MethodCall  go to state 75
+    Argument    go to state 112
+    Arguments   go to state 113
 
 
 State 78
 
-   42 WHILE_LOOP: T_WHILE EXPRESSION . '{' STATEMENTS '}'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   42 Assignment: T_ID T_ASSIGN . Expr T_SEMICOLON
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    '{'       shift, and go to state 111
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    Expr        go to state 114
+    MethodCall  go to state 75
 
 
 State 79
 
-   43 DO_WHILE: T_DO '{' . STATEMENTS '}' T_WHILE '(' EXPRESSION ')' ';'
+   43 Assignment: T_ID T_PERIOD . T_ID T_ASSIGN Expr T_SEMICOLON
+   70 MethodCall: T_ID T_PERIOD . T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
-
-    STATEMENTS   go to state 112
-    STATEMENT    go to state 57
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    T_ID  shift, and go to state 115
 
 
 State 80
 
-   65 METHOD_CALL: T_ID '(' . ARGUMENTS ')'
+   37 Statement: T_PRINT Expr . T_SEMICOLON
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    $default  reduce using rule 68 (ARGUMENTS)
-
-    EXPRESSION    go to state 113
-    METHOD_CALL   go to state 75
-    ARGUMENTS     go to state 114
-    ARGUMENTLIST  go to state 115
+    T_OR         shift, and go to state 100
+    T_AND        shift, and go to state 101
+    T_GT         shift, and go to state 102
+    T_GTE        shift, and go to state 103
+    T_EQUALS     shift, and go to state 104
+    T_MULT       shift, and go to state 106
+    T_DIV        shift, and go to state 107
+    T_PLUS       shift, and go to state 108
+    T_MINUS      shift, and go to state 109
+    T_SEMICOLON  shift, and go to state 116
 
 
 State 81
 
-   38 ASSIGMEMT: T_ID '=' . EXPRESSION ';'
+   48 Return: T_RETURN Expr . T_SEMICOLON
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 116
-    METHOD_CALL  go to state 75
+    T_OR         shift, and go to state 100
+    T_AND        shift, and go to state 101
+    T_GT         shift, and go to state 102
+    T_GTE        shift, and go to state 103
+    T_EQUALS     shift, and go to state 104
+    T_MULT       shift, and go to state 106
+    T_DIV        shift, and go to state 107
+    T_PLUS       shift, and go to state 108
+    T_MINUS      shift, and go to state 109
+    T_SEMICOLON  shift, and go to state 117
 
 
 State 82
 
-   39 ASSIGMEMT: T_ID '.' . T_ID '=' EXPRESSION ';'
-   66 METHOD_CALL: T_ID '.' . T_ID '(' ARGUMENTS ')'
+   13 Methods: T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE .
 
-    T_ID  shift, and go to state 117
+    $default  reduce using rule 13 (Methods)
 
 
 State 83
 
-   29 IDS: T_ID .
+   29 Declaration: Type T_ID .
 
-    $default  reduce using rule 29 (IDS)
+    $default  reduce using rule 29 (Declaration)
 
 
 State 84
 
-   27 DECLARATIONS: TYPE IDS . ';'
-   28 IDS: IDS . ',' T_ID
+   26 Declarations: Declarations Declaration . T_SEMICOLON
+   28 Declaration: Declaration . T_COMMA T_ID
 
-    ';'  shift, and go to state 118
-    ','  shift, and go to state 119
+    T_COMMA      shift, and go to state 87
+    T_SEMICOLON  shift, and go to state 118
 
 
 State 85
 
-   17 METHODS: T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}' .
+   14 Body: Declarations Statements . Return
+   15     | Declarations Statements .
+   30 Statements: Statements . Statement
 
-    $default  reduce using rule 17 (METHODS)
+    T_DO      shift, and go to state 46
+    T_WHILE   shift, and go to state 47
+    T_IF      shift, and go to state 48
+    T_ID      shift, and go to state 89
+    T_PRINT   shift, and go to state 50
+    T_RETURN  shift, and go to state 51
+
+    $default  reduce using rule 15 (Body)
+
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    Return      go to state 119
+    MethodCall  go to state 63
 
 
 State 86
 
-   26 DECLARATIONS: DECLARATIONS TYPE . IDS ';'
+   18 Body: Declarations Return .
 
-    T_ID  shift, and go to state 83
-
-    IDS  go to state 120
+    $default  reduce using rule 18 (Body)
 
 
 State 87
 
-   18 BODY: DECLARATIONS STATEMENTS . OPT_RETURN
-   30 STATEMENTS: STATEMENTS . STATEMENT
+   28 Declaration: Declaration T_COMMA . T_ID
 
-    T_PRINT   shift, and go to state 47
-    T_IF      shift, and go to state 48
-    T_RETURN  shift, and go to state 49
-    T_WHILE   shift, and go to state 50
-    T_DO      shift, and go to state 51
-    T_ID      shift, and go to state 89
-
-    $default  reduce using rule 72 (OPT_RETURN)
-
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
-    OPT_RETURN   go to state 121
+    T_ID  shift, and go to state 120
 
 
 State 88
 
-   19 BODY: DECLARATIONS OPT_RETURN .
+   27 Declarations: Declaration T_SEMICOLON .
 
-    $default  reduce using rule 19 (BODY)
+    $default  reduce using rule 27 (Declarations)
 
 
 State 89
 
-   38 ASSIGMEMT: T_ID . '=' EXPRESSION ';'
-   39          | T_ID . '.' T_ID '=' EXPRESSION ';'
-   65 METHOD_CALL: T_ID . '(' ARGUMENTS ')'
-   66            | T_ID . '.' T_ID '(' ARGUMENTS ')'
+   42 Assignment: T_ID . T_ASSIGN Expr T_SEMICOLON
+   43           | T_ID . T_PERIOD T_ID T_ASSIGN Expr T_SEMICOLON
+   69 MethodCall: T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
+   70           | T_ID . T_PERIOD T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    '('  shift, and go to state 80
-    '='  shift, and go to state 81
-    '.'  shift, and go to state 82
+    T_OPEN_PAREN  shift, and go to state 77
+    T_ASSIGN      shift, and go to state 78
+    T_PERIOD      shift, and go to state 79
 
 
 State 90
 
-   30 STATEMENTS: STATEMENTS STATEMENT .
+   30 Statements: Statements Statement .
 
-    $default  reduce using rule 30 (STATEMENTS)
+    $default  reduce using rule 30 (Statements)
 
 
 State 91
 
-   20 BODY: STATEMENTS OPT_RETURN .
+   19 Body: Statements Return .
 
-    $default  reduce using rule 20 (BODY)
+    $default  reduce using rule 19 (Body)
 
 
 State 92
 
-   33 STATEMENT: METHOD_CALL ';' .
+   33 Statement: MethodCall T_SEMICOLON .
 
-    $default  reduce using rule 33 (STATEMENT)
+    $default  reduce using rule 33 (Statement)
 
 
 State 93
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY . '}'
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body . T_CLOSED_BRACE
 
-    '}'  shift, and go to state 122
+    T_CLOSED_BRACE  shift, and go to state 121
 
 
 State 94
 
-   63 EXPRESSION: T_NEW T_ID .
-   64           | T_NEW T_ID . '(' ARGUMENTS ')'
+   30 Statements: Statements . Statement
+   41 DoWhile: T_DO T_OPEN_BRACE Statements . T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-    '('  shift, and go to state 123
+    T_DO            shift, and go to state 46
+    T_WHILE         shift, and go to state 47
+    T_IF            shift, and go to state 48
+    T_ID            shift, and go to state 89
+    T_CLOSED_BRACE  shift, and go to state 122
+    T_PRINT         shift, and go to state 50
 
-    $default  reduce using rule 63 (EXPRESSION)
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 95
 
-   57 EXPRESSION: T_ID '.' . T_ID
-   66 METHOD_CALL: T_ID '.' . T_ID '(' ARGUMENTS ')'
+   61 Expr: T_ID T_PERIOD . T_ID
+   70 MethodCall: T_ID T_PERIOD . T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    T_ID  shift, and go to state 124
+    T_ID  shift, and go to state 123
 
 
 State 96
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   54           | T_NOT EXPRESSION .
+   67 Expr: T_NEW T_ID .
+   68     | T_NEW T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    $default  reduce using rule 54 (EXPRESSION)
+    T_OPEN_PAREN  shift, and go to state 124
+
+    $default  reduce using rule 67 (Expr)
 
 
 State 97
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   55           | '-' EXPRESSION .
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   63     | T_OPEN_PAREN Expr . T_CLOSED_PAREN
 
-    $default  reduce using rule 55 (EXPRESSION)
+    T_OR            shift, and go to state 100
+    T_AND           shift, and go to state 101
+    T_GT            shift, and go to state 102
+    T_GTE           shift, and go to state 103
+    T_EQUALS        shift, and go to state 104
+    T_CLOSED_PAREN  shift, and go to state 125
+    T_MULT          shift, and go to state 106
+    T_DIV           shift, and go to state 107
+    T_PLUS          shift, and go to state 108
+    T_MINUS         shift, and go to state 109
 
 
 State 98
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   59           | '(' EXPRESSION . ')'
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   59     | T_MINUS Expr .
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ')'       shift, and go to state 125
+    $default  reduce using rule 59 (Expr)
 
 
 State 99
 
-   50 EXPRESSION: EXPRESSION T_GTE . EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   58     | T_NOT Expr .
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 126
-    METHOD_CALL  go to state 75
+    $default  reduce using rule 58 (Expr)
 
 
 State 100
 
-   51 EXPRESSION: EXPRESSION T_EQUALS . EXPRESSION
+   57 Expr: Expr T_OR . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 127
-    METHOD_CALL  go to state 75
+    Expr        go to state 126
+    MethodCall  go to state 75
 
 
 State 101
 
-   52 EXPRESSION: EXPRESSION T_AND . EXPRESSION
+   56 Expr: Expr T_AND . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 128
-    METHOD_CALL  go to state 75
+    Expr        go to state 127
+    MethodCall  go to state 75
 
 
 State 102
 
-   53 EXPRESSION: EXPRESSION T_OR . EXPRESSION
+   53 Expr: Expr T_GT . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 129
-    METHOD_CALL  go to state 75
+    Expr        go to state 128
+    MethodCall  go to state 75
 
 
 State 103
 
-   49 EXPRESSION: EXPRESSION '>' . EXPRESSION
+   54 Expr: Expr T_GTE . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 130
-    METHOD_CALL  go to state 75
+    Expr        go to state 129
+    MethodCall  go to state 75
 
 
 State 104
 
-   45 EXPRESSION: EXPRESSION '+' . EXPRESSION
+   55 Expr: Expr T_EQUALS . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 131
-    METHOD_CALL  go to state 75
+    Expr        go to state 130
+    MethodCall  go to state 75
 
 
 State 105
 
-   46 EXPRESSION: EXPRESSION '-' . EXPRESSION
+   40 While: T_WHILE Expr T_OPEN_BRACE . Statements T_CLOSED_BRACE
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_DO     shift, and go to state 46
+    T_WHILE  shift, and go to state 47
+    T_IF     shift, and go to state 48
+    T_ID     shift, and go to state 89
+    T_PRINT  shift, and go to state 50
 
-    EXPRESSION   go to state 132
-    METHOD_CALL  go to state 75
+    Statements  go to state 131
+    Statement   go to state 57
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 106
 
-   47 EXPRESSION: EXPRESSION '*' . EXPRESSION
+   51 Expr: Expr T_MULT . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 133
-    METHOD_CALL  go to state 75
+    Expr        go to state 132
+    MethodCall  go to state 75
 
 
 State 107
 
-   48 EXPRESSION: EXPRESSION '/' . EXPRESSION
+   52 Expr: Expr T_DIV . Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    EXPRESSION   go to state 134
-    METHOD_CALL  go to state 75
+    Expr        go to state 133
+    MethodCall  go to state 75
 
 
 State 108
 
-   44 PRINT: T_PRINT EXPRESSION ';' .
+   49 Expr: Expr T_PLUS . Expr
 
-    $default  reduce using rule 44 (PRINT)
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    Expr        go to state 134
+    MethodCall  go to state 75
 
 
 State 109
 
-   40 IF_ELSE: T_IF EXPRESSION '{' . STATEMENTS '}'
-   41        | T_IF EXPRESSION '{' . STATEMENTS '}' T_ELSE '{' STATEMENTS '}'
+   50 Expr: Expr T_MINUS . Expr
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    STATEMENTS   go to state 135
-    STATEMENT    go to state 57
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    Expr        go to state 135
+    MethodCall  go to state 75
 
 
 State 110
 
-   71 OPT_RETURN: T_RETURN EXPRESSION ';' .
+   38 IfElse: T_IF Expr T_OPEN_BRACE . Statements T_CLOSED_BRACE
+   39       | T_IF Expr T_OPEN_BRACE . Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    $default  reduce using rule 71 (OPT_RETURN)
+    T_DO     shift, and go to state 46
+    T_WHILE  shift, and go to state 47
+    T_IF     shift, and go to state 48
+    T_ID     shift, and go to state 89
+    T_PRINT  shift, and go to state 50
+
+    Statements  go to state 136
+    Statement   go to state 57
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 111
 
-   42 WHILE_LOOP: T_WHILE EXPRESSION '{' . STATEMENTS '}'
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   74 Arguments: Expr .
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
+    T_OR      shift, and go to state 100
+    T_AND     shift, and go to state 101
+    T_GT      shift, and go to state 102
+    T_GTE     shift, and go to state 103
+    T_EQUALS  shift, and go to state 104
+    T_MULT    shift, and go to state 106
+    T_DIV     shift, and go to state 107
+    T_PLUS    shift, and go to state 108
+    T_MINUS   shift, and go to state 109
 
-    STATEMENTS   go to state 136
-    STATEMENT    go to state 57
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    $default  reduce using rule 74 (Arguments)
 
 
 State 112
 
-   30 STATEMENTS: STATEMENTS . STATEMENT
-   43 DO_WHILE: T_DO '{' STATEMENTS . '}' T_WHILE '(' EXPRESSION ')' ';'
+   69 MethodCall: T_ID T_OPEN_PAREN Argument . T_CLOSED_PAREN
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
-    '}'      shift, and go to state 137
-
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    T_CLOSED_PAREN  shift, and go to state 137
 
 
 State 113
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   70 ARGUMENTLIST: EXPRESSION .
+   71 Argument: Arguments .
+   73 Arguments: Arguments . T_COMMA Expr
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
+    T_COMMA  shift, and go to state 138
 
-    $default  reduce using rule 70 (ARGUMENTLIST)
+    $default  reduce using rule 71 (Argument)
 
 
 State 114
 
-   65 METHOD_CALL: T_ID '(' ARGUMENTS . ')'
+   42 Assignment: T_ID T_ASSIGN Expr . T_SEMICOLON
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    ')'  shift, and go to state 138
+    T_OR         shift, and go to state 100
+    T_AND        shift, and go to state 101
+    T_GT         shift, and go to state 102
+    T_GTE        shift, and go to state 103
+    T_EQUALS     shift, and go to state 104
+    T_MULT       shift, and go to state 106
+    T_DIV        shift, and go to state 107
+    T_PLUS       shift, and go to state 108
+    T_MINUS      shift, and go to state 109
+    T_SEMICOLON  shift, and go to state 139
 
 
 State 115
 
-   67 ARGUMENTS: ARGUMENTLIST .
-   69 ARGUMENTLIST: ARGUMENTLIST . ',' EXPRESSION
+   43 Assignment: T_ID T_PERIOD T_ID . T_ASSIGN Expr T_SEMICOLON
+   70 MethodCall: T_ID T_PERIOD T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    ','  shift, and go to state 139
-
-    $default  reduce using rule 67 (ARGUMENTS)
+    T_OPEN_PAREN  shift, and go to state 140
+    T_ASSIGN      shift, and go to state 141
 
 
 State 116
 
-   38 ASSIGMEMT: T_ID '=' EXPRESSION . ';'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   37 Statement: T_PRINT Expr T_SEMICOLON .
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ';'       shift, and go to state 140
+    $default  reduce using rule 37 (Statement)
 
 
 State 117
 
-   39 ASSIGMEMT: T_ID '.' T_ID . '=' EXPRESSION ';'
-   66 METHOD_CALL: T_ID '.' T_ID . '(' ARGUMENTS ')'
+   48 Return: T_RETURN Expr T_SEMICOLON .
 
-    '('  shift, and go to state 141
-    '='  shift, and go to state 142
+    $default  reduce using rule 48 (Return)
 
 
 State 118
 
-   27 DECLARATIONS: TYPE IDS ';' .
+   26 Declarations: Declarations Declaration T_SEMICOLON .
 
-    $default  reduce using rule 27 (DECLARATIONS)
+    $default  reduce using rule 26 (Declarations)
 
 
 State 119
 
-   28 IDS: IDS ',' . T_ID
+   14 Body: Declarations Statements Return .
 
-    T_ID  shift, and go to state 143
+    $default  reduce using rule 14 (Body)
 
 
 State 120
 
-   26 DECLARATIONS: DECLARATIONS TYPE IDS . ';'
-   28 IDS: IDS . ',' T_ID
+   28 Declaration: Declaration T_COMMA T_ID .
 
-    ';'  shift, and go to state 144
-    ','  shift, and go to state 119
+    $default  reduce using rule 28 (Declaration)
 
 
 State 121
 
-   18 BODY: DECLARATIONS STATEMENTS OPT_RETURN .
+   12 Methods: Methods T_ID T_OPEN_PAREN Parameter T_CLOSED_PAREN T_ARROW Type T_OPEN_BRACE Body T_CLOSED_BRACE .
 
-    $default  reduce using rule 18 (BODY)
+    $default  reduce using rule 12 (Methods)
 
 
 State 122
 
-   16 METHODS: METHODS T_ID '(' PARAMETERS ')' T_FUNC TYPE '{' BODY '}' .
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE . T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-    $default  reduce using rule 16 (METHODS)
+    T_WHILE  shift, and go to state 142
 
 
 State 123
 
-   64 EXPRESSION: T_NEW T_ID '(' . ARGUMENTS ')'
+   61 Expr: T_ID T_PERIOD T_ID .
+   70 MethodCall: T_ID T_PERIOD T_ID . T_OPEN_PAREN Argument T_CLOSED_PAREN
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_OPEN_PAREN  shift, and go to state 140
 
-    $default  reduce using rule 68 (ARGUMENTS)
-
-    EXPRESSION    go to state 113
-    METHOD_CALL   go to state 75
-    ARGUMENTS     go to state 145
-    ARGUMENTLIST  go to state 115
+    $default  reduce using rule 61 (Expr)
 
 
 State 124
 
-   57 EXPRESSION: T_ID '.' T_ID .
-   66 METHOD_CALL: T_ID '.' T_ID . '(' ARGUMENTS ')'
+   68 Expr: T_NEW T_ID T_OPEN_PAREN . Argument T_CLOSED_PAREN
 
-    '('  shift, and go to state 141
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    $default  reduce using rule 57 (EXPRESSION)
+    $default  reduce using rule 72 (Argument)
+
+    Expr        go to state 111
+    MethodCall  go to state 75
+    Argument    go to state 143
+    Arguments   go to state 113
 
 
 State 125
 
-   59 EXPRESSION: '(' EXPRESSION ')' .
+   63 Expr: T_OPEN_PAREN Expr T_CLOSED_PAREN .
 
-    $default  reduce using rule 59 (EXPRESSION)
+    $default  reduce using rule 63 (Expr)
 
 
 State 126
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   50           | EXPRESSION T_GTE EXPRESSION .
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   57     | Expr T_OR Expr .
 
-    '+'  shift, and go to state 104
-    '-'  shift, and go to state 105
-    '*'  shift, and go to state 106
-    '/'  shift, and go to state 107
+    T_GT      shift, and go to state 102
+    T_GTE     shift, and go to state 103
+    T_EQUALS  shift, and go to state 104
+    T_MULT    shift, and go to state 106
+    T_DIV     shift, and go to state 107
+    T_PLUS    shift, and go to state 108
+    T_MINUS   shift, and go to state 109
 
-    $default  reduce using rule 50 (EXPRESSION)
+    $default  reduce using rule 57 (Expr)
 
 
 State 127
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   51           | EXPRESSION T_EQUALS EXPRESSION .
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   56     | Expr T_AND Expr .
+   57     | Expr . T_OR Expr
 
-    '+'  shift, and go to state 104
-    '-'  shift, and go to state 105
-    '*'  shift, and go to state 106
-    '/'  shift, and go to state 107
+    T_GT      shift, and go to state 102
+    T_GTE     shift, and go to state 103
+    T_EQUALS  shift, and go to state 104
+    T_MULT    shift, and go to state 106
+    T_DIV     shift, and go to state 107
+    T_PLUS    shift, and go to state 108
+    T_MINUS   shift, and go to state 109
 
-    $default  reduce using rule 51 (EXPRESSION)
+    $default  reduce using rule 56 (Expr)
 
 
 State 128
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   52           | EXPRESSION T_AND EXPRESSION .
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   53     | Expr T_GT Expr .
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
+    T_MULT   shift, and go to state 106
+    T_DIV    shift, and go to state 107
+    T_PLUS   shift, and go to state 108
+    T_MINUS  shift, and go to state 109
 
-    $default  reduce using rule 52 (EXPRESSION)
+    $default  reduce using rule 53 (Expr)
 
 
 State 129
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   53           | EXPRESSION T_OR EXPRESSION .
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   54     | Expr T_GTE Expr .
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
+    T_MULT   shift, and go to state 106
+    T_DIV    shift, and go to state 107
+    T_PLUS   shift, and go to state 108
+    T_MINUS  shift, and go to state 109
 
-    $default  reduce using rule 53 (EXPRESSION)
+    $default  reduce using rule 54 (Expr)
 
 
 State 130
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   49           | EXPRESSION '>' EXPRESSION .
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   55     | Expr T_EQUALS Expr .
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    '+'  shift, and go to state 104
-    '-'  shift, and go to state 105
-    '*'  shift, and go to state 106
-    '/'  shift, and go to state 107
+    T_MULT   shift, and go to state 106
+    T_DIV    shift, and go to state 107
+    T_PLUS   shift, and go to state 108
+    T_MINUS  shift, and go to state 109
 
-    $default  reduce using rule 49 (EXPRESSION)
+    $default  reduce using rule 55 (Expr)
 
 
 State 131
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   45           | EXPRESSION '+' EXPRESSION .
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   30 Statements: Statements . Statement
+   40 While: T_WHILE Expr T_OPEN_BRACE Statements . T_CLOSED_BRACE
 
-    '*'  shift, and go to state 106
-    '/'  shift, and go to state 107
+    T_DO            shift, and go to state 46
+    T_WHILE         shift, and go to state 47
+    T_IF            shift, and go to state 48
+    T_ID            shift, and go to state 89
+    T_CLOSED_BRACE  shift, and go to state 144
+    T_PRINT         shift, and go to state 50
 
-    $default  reduce using rule 45 (EXPRESSION)
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 132
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   46           | EXPRESSION '-' EXPRESSION .
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   51     | Expr T_MULT Expr .
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    '*'  shift, and go to state 106
-    '/'  shift, and go to state 107
-
-    $default  reduce using rule 46 (EXPRESSION)
+    $default  reduce using rule 51 (Expr)
 
 
 State 133
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   47           | EXPRESSION '*' EXPRESSION .
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   52     | Expr T_DIV Expr .
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    $default  reduce using rule 47 (EXPRESSION)
+    $default  reduce using rule 52 (Expr)
 
 
 State 134
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   48           | EXPRESSION '/' EXPRESSION .
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   49 Expr: Expr . T_PLUS Expr
+   49     | Expr T_PLUS Expr .
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    $default  reduce using rule 48 (EXPRESSION)
+    T_MULT  shift, and go to state 106
+    T_DIV   shift, and go to state 107
+
+    $default  reduce using rule 49 (Expr)
 
 
 State 135
 
-   30 STATEMENTS: STATEMENTS . STATEMENT
-   40 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS . '}'
-   41        | T_IF EXPRESSION '{' STATEMENTS . '}' T_ELSE '{' STATEMENTS '}'
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   50     | Expr T_MINUS Expr .
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
-    '}'      shift, and go to state 146
+    T_MULT  shift, and go to state 106
+    T_DIV   shift, and go to state 107
 
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    $default  reduce using rule 50 (Expr)
 
 
 State 136
 
-   30 STATEMENTS: STATEMENTS . STATEMENT
-   42 WHILE_LOOP: T_WHILE EXPRESSION '{' STATEMENTS . '}'
+   30 Statements: Statements . Statement
+   38 IfElse: T_IF Expr T_OPEN_BRACE Statements . T_CLOSED_BRACE
+   39       | T_IF Expr T_OPEN_BRACE Statements . T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
-    '}'      shift, and go to state 147
+    T_DO            shift, and go to state 46
+    T_WHILE         shift, and go to state 47
+    T_IF            shift, and go to state 48
+    T_ID            shift, and go to state 89
+    T_CLOSED_BRACE  shift, and go to state 145
+    T_PRINT         shift, and go to state 50
 
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 137
 
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' . T_WHILE '(' EXPRESSION ')' ';'
+   69 MethodCall: T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN .
 
-    T_WHILE  shift, and go to state 148
+    $default  reduce using rule 69 (MethodCall)
 
 
 State 138
 
-   65 METHOD_CALL: T_ID '(' ARGUMENTS ')' .
+   73 Arguments: Arguments T_COMMA . Expr
 
-    $default  reduce using rule 65 (METHOD_CALL)
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    Expr        go to state 146
+    MethodCall  go to state 75
 
 
 State 139
 
-   69 ARGUMENTLIST: ARGUMENTLIST ',' . EXPRESSION
+   42 Assignment: T_ID T_ASSIGN Expr T_SEMICOLON .
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 149
-    METHOD_CALL  go to state 75
+    $default  reduce using rule 42 (Assignment)
 
 
 State 140
 
-   38 ASSIGMEMT: T_ID '=' EXPRESSION ';' .
+   70 MethodCall: T_ID T_PERIOD T_ID T_OPEN_PAREN . Argument T_CLOSED_PAREN
 
-    $default  reduce using rule 38 (ASSIGMEMT)
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
+
+    $default  reduce using rule 72 (Argument)
+
+    Expr        go to state 111
+    MethodCall  go to state 75
+    Argument    go to state 147
+    Arguments   go to state 113
 
 
 State 141
 
-   66 METHOD_CALL: T_ID '.' T_ID '(' . ARGUMENTS ')'
+   43 Assignment: T_ID T_PERIOD T_ID T_ASSIGN . Expr T_SEMICOLON
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    $default  reduce using rule 68 (ARGUMENTS)
-
-    EXPRESSION    go to state 113
-    METHOD_CALL   go to state 75
-    ARGUMENTS     go to state 150
-    ARGUMENTLIST  go to state 115
+    Expr        go to state 148
+    MethodCall  go to state 75
 
 
 State 142
 
-   39 ASSIGMEMT: T_ID '.' T_ID '=' . EXPRESSION ';'
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE . T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 151
-    METHOD_CALL  go to state 75
+    T_OPEN_PAREN  shift, and go to state 149
 
 
 State 143
 
-   28 IDS: IDS ',' T_ID .
+   68 Expr: T_NEW T_ID T_OPEN_PAREN Argument . T_CLOSED_PAREN
 
-    $default  reduce using rule 28 (IDS)
+    T_CLOSED_PAREN  shift, and go to state 150
 
 
 State 144
 
-   26 DECLARATIONS: DECLARATIONS TYPE IDS ';' .
+   40 While: T_WHILE Expr T_OPEN_BRACE Statements T_CLOSED_BRACE .
 
-    $default  reduce using rule 26 (DECLARATIONS)
+    $default  reduce using rule 40 (While)
 
 
 State 145
 
-   64 EXPRESSION: T_NEW T_ID '(' ARGUMENTS . ')'
+   38 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE .
+   39       | T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE . T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    ')'  shift, and go to state 152
+    T_ELSE  shift, and go to state 151
+
+    $default  reduce using rule 38 (IfElse)
 
 
 State 146
 
-   40 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}' .
-   41        | T_IF EXPRESSION '{' STATEMENTS '}' . T_ELSE '{' STATEMENTS '}'
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
+   73 Arguments: Arguments T_COMMA Expr .
 
-    T_ELSE  shift, and go to state 153
+    T_OR      shift, and go to state 100
+    T_AND     shift, and go to state 101
+    T_GT      shift, and go to state 102
+    T_GTE     shift, and go to state 103
+    T_EQUALS  shift, and go to state 104
+    T_MULT    shift, and go to state 106
+    T_DIV     shift, and go to state 107
+    T_PLUS    shift, and go to state 108
+    T_MINUS   shift, and go to state 109
 
-    $default  reduce using rule 40 (IF_ELSE)
+    $default  reduce using rule 73 (Arguments)
 
 
 State 147
 
-   42 WHILE_LOOP: T_WHILE EXPRESSION '{' STATEMENTS '}' .
+   70 MethodCall: T_ID T_PERIOD T_ID T_OPEN_PAREN Argument . T_CLOSED_PAREN
 
-    $default  reduce using rule 42 (WHILE_LOOP)
+    T_CLOSED_PAREN  shift, and go to state 152
 
 
 State 148
 
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE . '(' EXPRESSION ')' ';'
+   43 Assignment: T_ID T_PERIOD T_ID T_ASSIGN Expr . T_SEMICOLON
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    '('  shift, and go to state 154
+    T_OR         shift, and go to state 100
+    T_AND        shift, and go to state 101
+    T_GT         shift, and go to state 102
+    T_GTE        shift, and go to state 103
+    T_EQUALS     shift, and go to state 104
+    T_MULT       shift, and go to state 106
+    T_DIV        shift, and go to state 107
+    T_PLUS       shift, and go to state 108
+    T_MINUS      shift, and go to state 109
+    T_SEMICOLON  shift, and go to state 153
 
 
 State 149
 
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
-   69 ARGUMENTLIST: ARGUMENTLIST ',' EXPRESSION .
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN . Expr T_CLOSED_PAREN T_SEMICOLON
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
+    T_ID          shift, and go to state 66
+    T_NUMBER      shift, and go to state 67
+    T_NEW         shift, and go to state 68
+    T_TRUE        shift, and go to state 69
+    T_FALSE       shift, and go to state 70
+    T_OPEN_PAREN  shift, and go to state 71
+    T_MINUS       shift, and go to state 72
+    T_NOT         shift, and go to state 73
 
-    $default  reduce using rule 69 (ARGUMENTLIST)
+    Expr        go to state 154
+    MethodCall  go to state 75
 
 
 State 150
 
-   66 METHOD_CALL: T_ID '.' T_ID '(' ARGUMENTS . ')'
+   68 Expr: T_NEW T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN .
 
-    ')'  shift, and go to state 155
+    $default  reduce using rule 68 (Expr)
 
 
 State 151
 
-   39 ASSIGMEMT: T_ID '.' T_ID '=' EXPRESSION . ';'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   39 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE . T_OPEN_BRACE Statements T_CLOSED_BRACE
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ';'       shift, and go to state 156
+    T_OPEN_BRACE  shift, and go to state 155
 
 
 State 152
 
-   64 EXPRESSION: T_NEW T_ID '(' ARGUMENTS ')' .
+   70 MethodCall: T_ID T_PERIOD T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN .
 
-    $default  reduce using rule 64 (EXPRESSION)
+    $default  reduce using rule 70 (MethodCall)
 
 
 State 153
 
-   41 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}' T_ELSE . '{' STATEMENTS '}'
+   43 Assignment: T_ID T_PERIOD T_ID T_ASSIGN Expr T_SEMICOLON .
 
-    '{'  shift, and go to state 157
+    $default  reduce using rule 43 (Assignment)
 
 
 State 154
 
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE '(' . EXPRESSION ')' ';'
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr . T_CLOSED_PAREN T_SEMICOLON
+   49 Expr: Expr . T_PLUS Expr
+   50     | Expr . T_MINUS Expr
+   51     | Expr . T_MULT Expr
+   52     | Expr . T_DIV Expr
+   53     | Expr . T_GT Expr
+   54     | Expr . T_GTE Expr
+   55     | Expr . T_EQUALS Expr
+   56     | Expr . T_AND Expr
+   57     | Expr . T_OR Expr
 
-    T_NEW      shift, and go to state 66
-    T_ID       shift, and go to state 67
-    T_LITERAL  shift, and go to state 68
-    T_NOT      shift, and go to state 69
-    T_TRUE     shift, and go to state 70
-    T_FALSE    shift, and go to state 71
-    '-'        shift, and go to state 72
-    '('        shift, and go to state 73
-
-    EXPRESSION   go to state 158
-    METHOD_CALL  go to state 75
+    T_OR            shift, and go to state 100
+    T_AND           shift, and go to state 101
+    T_GT            shift, and go to state 102
+    T_GTE           shift, and go to state 103
+    T_EQUALS        shift, and go to state 104
+    T_CLOSED_PAREN  shift, and go to state 156
+    T_MULT          shift, and go to state 106
+    T_DIV           shift, and go to state 107
+    T_PLUS          shift, and go to state 108
+    T_MINUS         shift, and go to state 109
 
 
 State 155
 
-   66 METHOD_CALL: T_ID '.' T_ID '(' ARGUMENTS ')' .
+   39 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE . Statements T_CLOSED_BRACE
 
-    $default  reduce using rule 66 (METHOD_CALL)
+    T_DO     shift, and go to state 46
+    T_WHILE  shift, and go to state 47
+    T_IF     shift, and go to state 48
+    T_ID     shift, and go to state 89
+    T_PRINT  shift, and go to state 50
+
+    Statements  go to state 157
+    Statement   go to state 57
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 156
 
-   39 ASSIGMEMT: T_ID '.' T_ID '=' EXPRESSION ';' .
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN . T_SEMICOLON
 
-    $default  reduce using rule 39 (ASSIGMEMT)
+    T_SEMICOLON  shift, and go to state 158
 
 
 State 157
 
-   41 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}' T_ELSE '{' . STATEMENTS '}'
+   30 Statements: Statements . Statement
+   39 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements . T_CLOSED_BRACE
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
+    T_DO            shift, and go to state 46
+    T_WHILE         shift, and go to state 47
+    T_IF            shift, and go to state 48
+    T_ID            shift, and go to state 89
+    T_CLOSED_BRACE  shift, and go to state 159
+    T_PRINT         shift, and go to state 50
 
-    STATEMENTS   go to state 159
-    STATEMENT    go to state 57
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
+    Statement   go to state 90
+    IfElse      go to state 58
+    While       go to state 59
+    DoWhile     go to state 60
+    Assignment  go to state 61
+    MethodCall  go to state 63
 
 
 State 158
 
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE '(' EXPRESSION . ')' ';'
-   45 EXPRESSION: EXPRESSION . '+' EXPRESSION
-   46           | EXPRESSION . '-' EXPRESSION
-   47           | EXPRESSION . '*' EXPRESSION
-   48           | EXPRESSION . '/' EXPRESSION
-   49           | EXPRESSION . '>' EXPRESSION
-   50           | EXPRESSION . T_GTE EXPRESSION
-   51           | EXPRESSION . T_EQUALS EXPRESSION
-   52           | EXPRESSION . T_AND EXPRESSION
-   53           | EXPRESSION . T_OR EXPRESSION
+   41 DoWhile: T_DO T_OPEN_BRACE Statements T_CLOSED_BRACE T_WHILE T_OPEN_PAREN Expr T_CLOSED_PAREN T_SEMICOLON .
 
-    T_GTE     shift, and go to state 99
-    T_EQUALS  shift, and go to state 100
-    T_AND     shift, and go to state 101
-    T_OR      shift, and go to state 102
-    '>'       shift, and go to state 103
-    '+'       shift, and go to state 104
-    '-'       shift, and go to state 105
-    '*'       shift, and go to state 106
-    '/'       shift, and go to state 107
-    ')'       shift, and go to state 160
+    $default  reduce using rule 41 (DoWhile)
 
 
 State 159
 
-   30 STATEMENTS: STATEMENTS . STATEMENT
-   41 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}' T_ELSE '{' STATEMENTS . '}'
+   39 IfElse: T_IF Expr T_OPEN_BRACE Statements T_CLOSED_BRACE T_ELSE T_OPEN_BRACE Statements T_CLOSED_BRACE .
 
-    T_PRINT  shift, and go to state 47
-    T_IF     shift, and go to state 48
-    T_WHILE  shift, and go to state 50
-    T_DO     shift, and go to state 51
-    T_ID     shift, and go to state 89
-    '}'      shift, and go to state 161
-
-    STATEMENT    go to state 90
-    ASSIGMEMT    go to state 58
-    IF_ELSE      go to state 59
-    WHILE_LOOP   go to state 60
-    DO_WHILE     go to state 61
-    PRINT        go to state 62
-    METHOD_CALL  go to state 63
-
-
-State 160
-
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE '(' EXPRESSION ')' . ';'
-
-    ';'  shift, and go to state 162
-
-
-State 161
-
-   41 IF_ELSE: T_IF EXPRESSION '{' STATEMENTS '}' T_ELSE '{' STATEMENTS '}' .
-
-    $default  reduce using rule 41 (IF_ELSE)
-
-
-State 162
-
-   43 DO_WHILE: T_DO '{' STATEMENTS '}' T_WHILE '(' EXPRESSION ')' ';' .
-
-    $default  reduce using rule 43 (DO_WHILE)
+    $default  reduce using rule 39 (IfElse)
