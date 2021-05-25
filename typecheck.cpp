@@ -103,46 +103,67 @@ void TypeCheck::visitClassNode(ClassNode* node) {
     if(classTable->find(superClassName) == classTable->end()) 
       typeError(undefined_class);
 
-    //inheriting superclass methods and members
-    while(superClassName != "") {
-      auto superClassInfo = classTable->find(superClassName)->second;
-      if(superClassInfo.members) {
-        for(auto memItr = superClassInfo.members->begin(); memItr != superClassInfo.members->end(); memItr++) {
-          VariableInfo vi = memItr->second;  //unfortunate cant mutate an iterator
-          vi.offset = currentMemberOffset;
+    // //inheriting superclass methods and members
+    // while(superClassName != "") {
+    //   auto superClassInfo = classTable->find(superClassName)->second;
+    //   if(superClassInfo.members) {
+    //     for(auto memItr = superClassInfo.members->begin(); memItr != superClassInfo.members->end(); memItr++) {
+    //       VariableInfo vi = memItr->second;  //unfortunate cant mutate an iterator
+    //       vi.offset = currentMemberOffset;
 
-          (*currentVariableTable)[memItr->first] = vi;
-          currentMemberOffset += 4;
-          clsinfo.membersSize += vi.size; 
-        }
-      }
-      //questionable
-      if(superClassInfo.methods) {
-        for(auto methodItr = superClassInfo.methods->begin(); methodItr != superClassInfo.methods->end(); methodItr++) {
-          (*currentMethodTable)[methodItr->first] = methodItr->second; // do i even need to do a deep copy?? 
-        }
-      }
-      superClassName = superClassInfo.superClassName;
-    }
+    //       (*currentVariableTable)[memItr->first] = vi;
+    //       currentMemberOffset += 4;
+    //       clsinfo.membersSize += vi.size; 
+    //     }
+    //   }
+    //   //questionable
+    //   if(superClassInfo.methods) {
+    //     for(auto methodItr = superClassInfo.methods->begin(); methodItr != superClassInfo.methods->end(); methodItr++) {
+    //       (*currentMethodTable)[methodItr->first] = methodItr->second; // do i even need to do a deep copy?? 
+    //     }
+    //   }
+    //   superClassName = superClassInfo.superClassName;
+    // }
 
   }
 
   (*classTable)[currentClassName] = clsinfo;
   node->visit_children(this);
 
+
+  for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
+    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); dcl_list++) {
+      (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
+      currentMemberOffset += 4;
+    }
+  }
+
   if(currentClassName == "Main" && !currentVariableTable->empty()) 
     typeError(main_class_members_present);
 
+}
+
+//validates polymorphism relations on types
+bool valPoly(ClassTable* c, std::string child, std::string parent) {
+  std::string  superClass;
+
+  superClass = (*c)[child].superClassName;
+
+  while(superClass != parent) {
+    if(superClass == "") return false;
+    superClass = (*c)[superClass].superClassName;
+  }
+  return true;
 }
 
 
 void TypeCheck::visitMethodNode(MethodNode* node) {
   // WRITEME: Replace with code if necessary
   MethodInfo mi;
-  CompoundType returnType;
 
   //is going be filled when you visit children
-  mi.variables = new VariableTable();
+  currentVariableTable = new VariableTable();
+  mi.variables = currentVariableTable;
   mi.parameters = new std::list<CompoundType>();
   mi.localsSize = 0;  // how do i update this??? 
 
@@ -150,32 +171,91 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
   currentParameterOffset = 12;
   currentLocalOffset = -4;
   
+  node->visit_children(this);
+
+  mi.returnType = {node->type->basetype, node->type->objectClassName};
+  for(auto prmList = node->parameter_list->begin(); prmList != node->parameter_list->end(); prmList++) {
+    mi.parameters->push_back({(*prmList)->type->basetype
+                                , (*prmList)->type->objectClassName });
+  }
+  mi.localsSize = (mi.variables->size()-mi.parameters->size()) * 4;
+
+
   (*currentMethodTable)[node->identifier->name] = mi;
 
-  node->visit_children(this);
+  //typechecking to see if return statement matches the return type
+  if(node->type->basetype == bt_object) {
+    if(classTable->find(node->type->objectClassName) == classTable->end()) 
+      typeError(undefined_class);
+    
+    if(!valPoly(classTable, node->methodbody->objectClassName, node->type->objectClassName))
+      typeError(return_type_mismatch);
+  }
+  
+  if(node->type->basetype != node->methodbody->basetype)
+    typeError(return_type_mismatch)
+
 }
 
 
 
 void TypeCheck::visitMethodBodyNode(MethodBodyNode* node) {
   // WRITEME: Replace with code if necessary
+  node->visit_children(this);
 
+  for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
+    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); dcl_list++) {
+      (*currentVariableTable)[(*ids)->name].offset = currentLocalOffset;
+      currentLocalOffset -= 4;
+    }
+  }
+
+  if(node->returnstatement) {
+    node->basetype = node->returnstatement->basetype;
+    node->objectClassName = node->returnstatement->objectClassName;
+  } else {
+    node->basetype = bt_none;
+  }
 }
 
 void TypeCheck::visitParameterNode(ParameterNode* node) {
   // WRITEME: Replace with code if necessary
+  VariableInfo vi; 
+
+  node->visit_children(this);
+
+  vi.type = {node->type->basetype, node->type->objectClassName};
+  vi.offset = currentParameterOffset;
+  vi.size = 4;
+  (*currentVariableTable)[node->identifier->name] = vi;
+
+  currentParameterOffset += 4;
 }
 
 void TypeCheck::visitDeclarationNode(DeclarationNode* node) {
   // WRITEME: Replace with code if necessary
+  VariableInfo vi;
+
+  node->visit_children(this);
+  for(auto ids = node->identifier_list->begin(); ids != node->identifier_list->end(); ids++) {
+    vi.type = {node->type->basetype, node->type->objectClassName};
+    vi.size = 4;
+    (*currentVariableTable)[(*ids)->name] = vi;
+  }
+
 }
 
 void TypeCheck::visitReturnStatementNode(ReturnStatementNode* node) {
   // WRITEME: Replace with code if necessary
+  node->visit_children(this);
+  node->basetype = node->expression->basetype;
+  node->objectClassName = node->expression->objectClassName;
 }
 
 void TypeCheck::visitAssignmentNode(AssignmentNode* node) {
   // WRITEME: Replace with code if necessary
+
+
 }
 
 void TypeCheck::visitCallNode(CallNode* node) {
