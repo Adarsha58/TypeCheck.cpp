@@ -190,10 +190,15 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
     
     if(!valPoly(classTable, node->methodbody->objectClassName, node->type->objectClassName))
       typeError(return_type_mismatch);
+
+  } else if(node->type->basetype != node->methodbody->basetype) {
+    typeError(return_type_mismatch);
   }
+
+  //checking if constructor have return value
+  if(node->identifier->name == currentClassName && node->type->basetype != bt_none) 
+    typeError(constructor_returns_type);
   
-  if(node->type->basetype != node->methodbody->basetype)
-    typeError(return_type_mismatch)
 
 }
 
@@ -204,7 +209,7 @@ void TypeCheck::visitMethodBodyNode(MethodBodyNode* node) {
   node->visit_children(this);
 
   for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
-    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); dcl_list++) {
+    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
       (*currentVariableTable)[(*ids)->name].offset = currentLocalOffset;
       currentLocalOffset -= 4;
     }
