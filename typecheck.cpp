@@ -69,7 +69,6 @@ void typeError(TypeErrorCode code)
 
 void TypeCheck::visitProgramNode(ProgramNode *node)
 {
-    // WRITEME: Replace with code if necessary
     classTable = new ClassTable();
     node->visit_children(this);
 
@@ -149,7 +148,6 @@ bool valPoly(ClassTable *c, std::string child, std::string parent)
 
 void TypeCheck::visitMethodNode(MethodNode *node)
 {
-    // WRITEME: Replace with code if necessary
     MethodInfo mi;
     VariableTable *before;
 
@@ -203,7 +201,6 @@ void TypeCheck::visitMethodNode(MethodNode *node)
 
 void TypeCheck::visitMethodBodyNode(MethodBodyNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
 
     if (node->declaration_list)
@@ -231,7 +228,6 @@ void TypeCheck::visitMethodBodyNode(MethodBodyNode *node)
 
 void TypeCheck::visitParameterNode(ParameterNode *node)
 {
-    // WRITEME: Replace with code if necessary
     VariableInfo vi;
 
     node->visit_children(this);
@@ -245,7 +241,6 @@ void TypeCheck::visitParameterNode(ParameterNode *node)
 
 void TypeCheck::visitDeclarationNode(DeclarationNode *node)
 {
-    // WRITEME: Replace with code if necessary
     VariableInfo vi;
     node->visit_children(this);
 
@@ -264,7 +259,6 @@ void TypeCheck::visitDeclarationNode(DeclarationNode *node)
 
 void TypeCheck::visitReturnStatementNode(ReturnStatementNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     node->basetype = node->expression->basetype;
     node->objectClassName = node->expression->objectClassName;
@@ -312,7 +306,6 @@ void checkAssignmentMismatch(VariableInfo *lhs, ExpressionNode *rhs, ClassTable 
 
 void TypeCheck::visitAssignmentNode(AssignmentNode *node)
 {
-    // WRITEME: Replace with code if necessary
     std::string var1, var2, clsName;
     VariableInfo *var1Info, *var2Info;
 
@@ -340,13 +333,11 @@ void TypeCheck::visitAssignmentNode(AssignmentNode *node)
 
 void TypeCheck::visitCallNode(CallNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
 }
 
 void TypeCheck::visitIfElseNode(IfElseNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression->basetype != bt_boolean)
     {
@@ -356,7 +347,6 @@ void TypeCheck::visitIfElseNode(IfElseNode *node)
 
 void TypeCheck::visitWhileNode(WhileNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression->basetype != bt_boolean)
     {
@@ -366,7 +356,6 @@ void TypeCheck::visitWhileNode(WhileNode *node)
 
 void TypeCheck::visitDoWhileNode(DoWhileNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression->basetype != bt_boolean)
     {
@@ -376,13 +365,11 @@ void TypeCheck::visitDoWhileNode(DoWhileNode *node)
 
 void TypeCheck::visitPrintNode(PrintNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
 }
 
 void TypeCheck::visitPlusNode(PlusNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -393,7 +380,6 @@ void TypeCheck::visitPlusNode(PlusNode *node)
 
 void TypeCheck::visitMinusNode(MinusNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -404,7 +390,6 @@ void TypeCheck::visitMinusNode(MinusNode *node)
 
 void TypeCheck::visitTimesNode(TimesNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -415,7 +400,6 @@ void TypeCheck::visitTimesNode(TimesNode *node)
 
 void TypeCheck::visitDivideNode(DivideNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -426,7 +410,6 @@ void TypeCheck::visitDivideNode(DivideNode *node)
 
 void TypeCheck::visitGreaterNode(GreaterNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -437,7 +420,6 @@ void TypeCheck::visitGreaterNode(GreaterNode *node)
 
 void TypeCheck::visitGreaterEqualNode(GreaterEqualNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer)
     {
@@ -448,7 +430,6 @@ void TypeCheck::visitGreaterEqualNode(GreaterEqualNode *node)
 
 void TypeCheck::visitEqualNode(EqualNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if ((node->expression_1->basetype != bt_boolean || node->expression_2->basetype != bt_boolean) && (node->expression_1->basetype != bt_integer || node->expression_2->basetype != bt_integer))
     {
@@ -459,7 +440,6 @@ void TypeCheck::visitEqualNode(EqualNode *node)
 
 void TypeCheck::visitAndNode(AndNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_boolean || node->expression_2->basetype != bt_boolean)
     {
@@ -470,7 +450,6 @@ void TypeCheck::visitAndNode(AndNode *node)
 
 void TypeCheck::visitOrNode(OrNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression_1->basetype != bt_boolean || node->expression_2->basetype != bt_boolean)
     {
@@ -481,7 +460,6 @@ void TypeCheck::visitOrNode(OrNode *node)
 
 void TypeCheck::visitNotNode(NotNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression->basetype != bt_boolean)
     {
@@ -492,7 +470,6 @@ void TypeCheck::visitNotNode(NotNode *node)
 
 void TypeCheck::visitNegationNode(NegationNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     if (node->expression->basetype != bt_integer)
     {
@@ -564,7 +541,6 @@ void ArgumentMismatch(MethodInfo *info, ClassTable *classTable, std::list<Expres
 
 void TypeCheck::visitMethodCallNode(MethodCallNode *node)
 {
-    // WRITEME: Replace with code if necessary
     MethodInfo *idInfo1, *idInfo2;
     VariableInfo *varInfo1;
 
@@ -599,8 +575,6 @@ void TypeCheck::visitMethodCallNode(MethodCallNode *node)
 
 void TypeCheck::visitMemberAccessNode(MemberAccessNode *node)
 {
-    // WRITEME: Replace with code if necessary
-
     std::string id1, id2, clsName;
     VariableInfo *idInfo1, *idInfo2;
 
@@ -624,7 +598,6 @@ void TypeCheck::visitMemberAccessNode(MemberAccessNode *node)
 
 void TypeCheck::visitVariableNode(VariableNode *node)
 {
-    // WRITEME: Replace with code if necessary
     std::string id;
     VariableInfo *vInfo;
     node->visit_children(this);
@@ -638,21 +611,18 @@ void TypeCheck::visitVariableNode(VariableNode *node)
 
 void TypeCheck::visitIntegerLiteralNode(IntegerLiteralNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     node->basetype = bt_integer;
 }
 
 void TypeCheck::visitBooleanLiteralNode(BooleanLiteralNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     node->basetype = bt_boolean;
 }
 
 void TypeCheck::visitNewNode(NewNode *node)
 {
-    // WRITEME: Replace with code if necessary
     std::string id;
     MethodTable *metTable;
 
@@ -692,19 +662,16 @@ void TypeCheck::visitNewNode(NewNode *node)
 
 void TypeCheck::visitIntegerTypeNode(IntegerTypeNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->basetype = bt_integer;
 }
 
 void TypeCheck::visitBooleanTypeNode(BooleanTypeNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->basetype = bt_boolean;
 }
 
 void TypeCheck::visitObjectTypeNode(ObjectTypeNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->visit_children(this);
     node->basetype = bt_object;
     node->objectClassName = node->identifier->name;
@@ -712,18 +679,15 @@ void TypeCheck::visitObjectTypeNode(ObjectTypeNode *node)
 
 void TypeCheck::visitNoneNode(NoneNode *node)
 {
-    // WRITEME: Replace with code if necessary
     node->basetype = bt_none;
 }
 
 void TypeCheck::visitIdentifierNode(IdentifierNode *node)
 {
-    // WRITEME: Replace with code if necessary
 }
 
 void TypeCheck::visitIntegerNode(IntegerNode *node)
 {
-    // WRITEME: Replace with code if necessary
 }
 
 // The following functions are used to print the Symbol Table.
