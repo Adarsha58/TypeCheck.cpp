@@ -102,29 +102,6 @@ void TypeCheck::visitClassNode(ClassNode* node) {
     //checking if immediate superclassName exists
     if(classTable->find(superClassName) == classTable->end()) 
       typeError(undefined_class);
-
-    // //inheriting superclass methods and members
-    // while(superClassName != "") {
-    //   auto superClassInfo = classTable->find(superClassName)->second;
-    //   if(superClassInfo.members) {
-    //     for(auto memItr = superClassInfo.members->begin(); memItr != superClassInfo.members->end(); memItr++) {
-    //       VariableInfo vi = memItr->second;  //unfortunate cant mutate an iterator
-    //       vi.offset = currentMemberOffset;
-
-    //       (*currentVariableTable)[memItr->first] = vi;
-    //       currentMemberOffset += 4;
-    //       clsinfo.membersSize += vi.size; 
-    //     }
-    //   }
-    //   //questionable
-    //   if(superClassInfo.methods) {
-    //     for(auto methodItr = superClassInfo.methods->begin(); methodItr != superClassInfo.methods->end(); methodItr++) {
-    //       (*currentMethodTable)[methodItr->first] = methodItr->second; // do i even need to do a deep copy?? 
-    //     }
-    //   }
-    //   superClassName = superClassInfo.superClassName;
-    // }
-
   }
 
   (*classTable)[currentClassName] = clsinfo;
@@ -132,7 +109,7 @@ void TypeCheck::visitClassNode(ClassNode* node) {
 
 
   for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
-    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); dcl_list++) {
+    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
       (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
       currentMemberOffset += 4;
     }
@@ -257,10 +234,59 @@ void TypeCheck::visitReturnStatementNode(ReturnStatementNode* node) {
   node->objectClassName = node->expression->objectClassName;
 }
 
+
+VariableInfo* validateVariable(VariableTable* varTable, ClassTable* classTable, std::string currentClassName, std::string var) {
+  VariableTable* clsMembers;
+
+  //checking if the variable exists in current scope
+  if(varTable && varTable->find(var) != varTable->end()) return &varTable->at(var);
+
+  //checking if var is a member of this class or superclass
+  while(currentClassName != "") {
+    clsMembers = (*classTable)[currentClassName].members;
+    if(clsMembers && clsMembers->find(var) != clsMembers->end()) return &clsMembers->at(var);
+    currentClassName = (*classTable)[currentClassName].superClassName;
+  }
+
+  return NULL;
+}
+
+void checkAssignmentMismatch(VariableInfo* lhs, ExpressionNode* rhs, ClassTable* classTable) {
+  if(lhs->type.baseType != rhs->basetype) {
+      if(lhs->type.baseType != bt_object)
+        typeError(assignment_type_mismatch);
+      else {
+        if(!valPoly(classTable, rhs->objectClassName, lhs->type.objectClassName))
+          typeError(assignment_type_mismatch);
+      }
+    }
+}
+
 void TypeCheck::visitAssignmentNode(AssignmentNode* node) {
   // WRITEME: Replace with code if necessary
+  std::string var1, var2, clsName;
+  VariableInfo* var1Info, * var2Info;
+
+  node->visit_children(this);
 
 
+  var1 = node->identifier_1->name;
+  var1Info = validateVariable(currentVariableTable, classTable, currentClassName, var1);
+
+  if(!var1Info)   typeError(undefined_variable);
+
+  // case1: simple assignment: t_id = expression
+  if(!node->identifier_2) {
+    checkAssignmentMismatch(var1Info, node->expression, classTable);
+  } else { //case 2: t_id.t_id = expression
+    clsName = var1Info-> type.objectClassName; 
+    var2Info = validateVariable(NULL, classTable, clsName, var2);
+    if(!var2Info) {
+      typeError(undefined_member);
+    } else {
+      checkAssignmentMismatch(var2Info, node->expression, classTable);
+    }
+  }
 }
 
 void TypeCheck::visitCallNode(CallNode* node) {
