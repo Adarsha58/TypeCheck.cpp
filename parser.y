@@ -186,7 +186,7 @@ Expr : Expr T_PLUS Expr                   { $$ = new PlusNode($1, $3);}
      | T_NUMBER                           { $$ = new IntegerLiteralNode(new IntegerNode($1)); }
      | T_TRUE                             { $$ = new BooleanLiteralNode(new IntegerNode(1));}
      | T_FALSE                            { $$ = new BooleanLiteralNode(new IntegerNode(0));}
-     | T_NEW T_ID                         { $$ = new NewNode(new IdentifierNode($2), new std::list<ExpressionNode*>());}
+     | T_NEW T_ID                         { $$ = new NewNode(new IdentifierNode($2), NULL);}
      | T_NEW T_ID T_OPEN_PAREN Argument T_CLOSED_PAREN { $$ = new NewNode(new IdentifierNode($2),$4);}
      ;
 

@@ -1,0 +1,30 @@
+void ArgumentMismatch(MethodInfo* info, ClassTable* classTable, MethodCallNode* node) {
+  if(!info)  {
+      typeError(undefined_method);
+    } 
+
+    if(info->parameters->size() != node->expression_list->size()) {
+      typeError(argument_number_mismatch);
+    } 
+    
+    auto parItr = info->parameters->begin();
+    auto exp_listItr = node->expression_list->begin();
+
+    for(; parItr != info->parameters->end(); parItr++, exp_listItr++) 
+    {
+      CompoundType par;
+      ExpressionNode* exp;
+
+      par = *parItr;
+      exp = *exp_listItr;
+
+      if(exp->basetype != par.baseType) {
+        if(exp->basetype != bt_object) {
+          typeError(argument_type_mismatch);
+        }
+        if(!valPoly(classTable, exp->objectClassName, par.objectClassName)) {
+            typeError(argument_type_mismatch);
+        }
+      }
+    }
+}
