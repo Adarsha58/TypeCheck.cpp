@@ -79,7 +79,7 @@ void TypeCheck::visitProgramNode(ProgramNode* node) {
 
 void TypeCheck::visitClassNode(ClassNode* node) {
   ClassInfo clsinfo;
-  std::string superClassName, currentClassName;
+  std::string superClassName;
 
 
   // initialization of tables 
@@ -107,15 +107,17 @@ void TypeCheck::visitClassNode(ClassNode* node) {
   (*classTable)[currentClassName] = clsinfo;
   node->visit_children(this);
 
-
-  for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
-    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
-      (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
-      currentMemberOffset += 4;
+  if(node->declaration_list) {
+    for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
+      for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
+        (*currentVariableTable)[(*ids)->name].offset = currentMemberOffset;
+        currentMemberOffset += 4;
+      }
     }
   }
+  
 
-  if(currentClassName == "Main" && !currentVariableTable->empty()) 
+  if(currentClassName == "Main" && !clsinfo.members->empty()) 
     typeError(main_class_members_present);
 
 }
@@ -137,11 +139,13 @@ bool valPoly(ClassTable* c, std::string child, std::string parent) {
 void TypeCheck::visitMethodNode(MethodNode* node) {
   // WRITEME: Replace with code if necessary
   MethodInfo mi;
+  VariableTable* before;
 
   //is going be filled when you visit children
+  before = currentVariableTable;
   currentVariableTable = new VariableTable();
   mi.variables = currentVariableTable;
-  mi.parameters = new std::list<CompoundType>();
+  mi.parameters = NULL;
   mi.localsSize = 0;  // how do i update this??? 
 
   //since methods body begins here we can set up the offset here
@@ -151,13 +155,17 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
   node->visit_children(this);
 
   mi.returnType = {node->type->basetype, node->type->objectClassName};
-  for(auto prmList = node->parameter_list->begin(); prmList != node->parameter_list->end(); prmList++) {
-    mi.parameters->push_back({(*prmList)->type->basetype
-                                , (*prmList)->type->objectClassName });
+  mi.localsSize = (mi.variables->size()) * 4;
+
+  if(node->parameter_list) {
+    mi.parameters = new std::list<CompoundType>();
+    for(auto prmList = node->parameter_list->begin(); prmList != node->parameter_list->end(); prmList++) {
+      mi.parameters->push_back({(*prmList)->type->basetype
+                                  , (*prmList)->type->objectClassName });
+      mi.localsSize -=4;
+    } 
   }
-  mi.localsSize = (mi.variables->size()-mi.parameters->size()) * 4;
-
-
+ ;
   (*currentMethodTable)[node->identifier->name] = mi;
 
   //typechecking to see if return statement matches the return type
@@ -165,7 +173,7 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
     if(classTable->find(node->type->objectClassName) == classTable->end()) 
       typeError(undefined_class);
     
-    if(!valPoly(classTable, node->methodbody->objectClassName, node->type->objectClassName))
+    if(node->type->basetype != node->methodbody->basetype && !valPoly(classTable, node->methodbody->objectClassName, node->type->objectClassName))
       typeError(return_type_mismatch);
 
   } else if(node->type->basetype != node->methodbody->basetype) {
@@ -176,6 +184,7 @@ void TypeCheck::visitMethodNode(MethodNode* node) {
   if(node->identifier->name == currentClassName && node->type->basetype != bt_none) 
     typeError(constructor_returns_type);
   
+  currentVariableTable = before;
 
 }
 
@@ -185,12 +194,16 @@ void TypeCheck::visitMethodBodyNode(MethodBodyNode* node) {
   // WRITEME: Replace with code if necessary
   node->visit_children(this);
 
-  for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
-    for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
-      (*currentVariableTable)[(*ids)->name].offset = currentLocalOffset;
-      currentLocalOffset -= 4;
+  if(node->declaration_list)
+  {
+    for(auto dcl_list = node->declaration_list->begin(); dcl_list != node->declaration_list->end(); dcl_list++) {
+      for(auto ids = (*dcl_list)->identifier_list->begin(); ids != (*dcl_list)->identifier_list->end(); ids++) {
+        (*currentVariableTable)[(*ids)->name].offset = currentLocalOffset;
+        currentLocalOffset -= 4;
+      }
     }
   }
+  
 
   if(node->returnstatement) {
     node->basetype = node->returnstatement->basetype;
@@ -205,7 +218,6 @@ void TypeCheck::visitParameterNode(ParameterNode* node) {
   VariableInfo vi; 
 
   node->visit_children(this);
-
   vi.type = {node->type->basetype, node->type->objectClassName};
   vi.offset = currentParameterOffset;
   vi.size = 4;
@@ -273,7 +285,6 @@ void TypeCheck::visitAssignmentNode(AssignmentNode* node) {
   var1 = node->identifier_1->name;
   var1Info = validateVariable(currentVariableTable, classTable, currentClassName, var1);
 
-  if(!var1Info)   typeError(undefined_variable);
 
   // case1: simple assignment: t_id = expression
   if(!node->identifier_2) {
@@ -383,7 +394,7 @@ void TypeCheck::visitEqualNode(EqualNode* node) {
   // WRITEME: Replace with code if necessary
   node->visit_children(this);
   if( (node->expression_1->basetype != bt_boolean || node->expression_2->basetype != bt_boolean) 
-   || (node->expression_1->basetype != bt_integer|| node->expression_2->basetype != bt_integer) ) 
+   && (node->expression_1->basetype != bt_integer|| node->expression_2->basetype != bt_integer) ) 
   {
     typeError(expression_type_mismatch);
   }
@@ -444,6 +455,13 @@ void ArgumentMismatch(MethodInfo* info, ClassTable* classTable, std::list<Expres
       typeError(undefined_method);
     } 
 
+    if(!info->parameters && !expression_list)
+      return;
+    
+    if(!expression_list || !info->parameters) {
+      typeError(argument_number_mismatch);
+    }
+
     if(info->parameters->size() !=  expression_list->size()) {
       typeError(argument_number_mismatch);
     } 
@@ -487,13 +505,19 @@ void TypeCheck::visitMethodCallNode(MethodCallNode* node) {
   if(!node->identifier_2) {
     idInfo1 = validateMethod(classTable, currentClassName, met1);
     ArgumentMismatch(idInfo1, classTable, node->expression_list);
+    node->basetype = idInfo1->returnType.baseType;
+    node->objectClassName = idInfo1->returnType.objectClassName;
   } else { //case 2
     met2 = node->identifier_2->name;
-    varInfo1 = validateVariable(currentVariableTable, classTable, currentClassName, met2);
+    varInfo1 = validateVariable(currentVariableTable, classTable, currentClassName, met1);
     clsName = varInfo1->type.objectClassName; 
     idInfo2 = validateMethod(classTable, clsName, met2);
     ArgumentMismatch(idInfo2, classTable, node->expression_list);
+    node->basetype = idInfo2->returnType.baseType;
+    node->objectClassName = idInfo2->returnType.objectClassName;
   } 
+
+  
   
 }
 
@@ -501,7 +525,7 @@ void TypeCheck::visitMemberAccessNode(MemberAccessNode* node) {
   // WRITEME: Replace with code if necessary
 
   std::string id1, id2, clsName;
-  VariableInfo* idInfo1;
+  VariableInfo* idInfo1, * idInfo2;
 
   node->visit_children(this);
   
@@ -511,17 +535,24 @@ void TypeCheck::visitMemberAccessNode(MemberAccessNode* node) {
   //check if id1 is a variable of current scope or classMember
   idInfo1 = validateVariable(currentVariableTable, classTable, currentClassName, id1);
   clsName = idInfo1->type.objectClassName;
-  validateVariable(NULL, classTable, clsName, id2);
+  idInfo2 = validateVariable(NULL, classTable, clsName, id2);
+
+  node->basetype = idInfo2->type.baseType;
+  node->objectClassName = idInfo2->type.objectClassName;
 
 }
 
 void TypeCheck::visitVariableNode(VariableNode* node) {
   // WRITEME: Replace with code if necessary
   std::string id;
+  VariableInfo* vInfo;
   node->visit_children(this);
 
   id = node->identifier->name;
-  validateVariable(currentVariableTable, classTable, currentClassName, id);
+  vInfo = validateVariable(currentVariableTable, classTable, currentClassName, id);
+
+  node->basetype = vInfo->type.baseType;
+  node->objectClassName = vInfo->type.objectClassName;
 }
 
 
