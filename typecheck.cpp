@@ -117,8 +117,12 @@ void TypeCheck::visitClassNode(ClassNode* node) {
   }
   
 
-  if(currentClassName == "Main" && !clsinfo.members->empty()) 
-    typeError(main_class_members_present);
+  if(currentClassName == "Main") {
+    if(!clsinfo.members->empty())  typeError(main_class_members_present);
+    if(clsinfo.methods->find("main") == clsinfo.methods->end())  typeError(no_main_method);
+    if(clsinfo.methods->at("main").parameters || clsinfo.methods->at("main").returnType.baseType != bt_none)  typeError(main_method_incorrect_signature);
+  }
+   
 
 }
 
@@ -229,8 +233,12 @@ void TypeCheck::visitParameterNode(ParameterNode* node) {
 void TypeCheck::visitDeclarationNode(DeclarationNode* node) {
   // WRITEME: Replace with code if necessary
   VariableInfo vi;
-
   node->visit_children(this);
+
+  if(node->type->basetype == bt_object && classTable->find(node->type->objectClassName) == classTable->end()) {
+    typeError(undefined_class);
+  }
+
   for(auto ids = node->identifier_list->begin(); ids != node->identifier_list->end(); ids++) {
     vi.type = {node->type->basetype, node->type->objectClassName};
     vi.size = 4;
@@ -259,13 +267,19 @@ VariableInfo* validateVariable(VariableTable* varTable, ClassTable* classTable, 
     if(clsMembers && clsMembers->find(var) != clsMembers->end()) return &clsMembers->at(var);
     currentClassName = (*classTable)[currentClassName].superClassName;
   }
-  typeError(undefined_variable);
+
+  //if you dont pass current variableTable that means var is a member variable
+  if(varTable)
+    typeError(undefined_variable);
+  else
+    typeError(undefined_member);
+
   return NULL;
 }
 
 void checkAssignmentMismatch(VariableInfo* lhs, ExpressionNode* rhs, ClassTable* classTable) {
   if(lhs->type.baseType != rhs->basetype) {
-      if(lhs->type.baseType != bt_object)
+      if(lhs->type.baseType != bt_object || rhs->basetype != bt_object)
         typeError(assignment_type_mismatch);
       else {
         if(!valPoly(classTable, rhs->objectClassName, lhs->type.objectClassName))
@@ -290,21 +304,18 @@ void TypeCheck::visitAssignmentNode(AssignmentNode* node) {
   if(!node->identifier_2) {
     checkAssignmentMismatch(var1Info, node->expression, classTable);
   } else { //case 2: t_id.t_id = expression
+    if(var1Info->type.baseType != bt_object) typeError(not_object);  //var1 has to be of classType
+    
     var2 = node->identifier_2->name;
     clsName = var1Info-> type.objectClassName; 
     var2Info = validateVariable(NULL, classTable, clsName, var2);
-    if(!var2Info) {
-      typeError(undefined_member);
-    } else {
-      checkAssignmentMismatch(var2Info, node->expression, classTable);
-    }
+    checkAssignmentMismatch(var2Info, node->expression, classTable);
   }
 }
 
 void TypeCheck::visitCallNode(CallNode* node) {
   // WRITEME: Replace with code if necessary
   node->visit_children(this);
-
 }
 
 void TypeCheck::visitIfElseNode(IfElseNode* node) {
@@ -478,7 +489,7 @@ void ArgumentMismatch(MethodInfo* info, ClassTable* classTable, std::list<Expres
       exp = *exp_listItr;
 
       if(exp->basetype != par.baseType) {
-        if(exp->basetype != bt_object) {
+        if(exp->basetype != bt_object || par.baseType != bt_object) {
           typeError(argument_type_mismatch);
         }
         if(!valPoly(classTable, exp->objectClassName, par.objectClassName)) {
@@ -510,6 +521,8 @@ void TypeCheck::visitMethodCallNode(MethodCallNode* node) {
   } else { //case 2
     met2 = node->identifier_2->name;
     varInfo1 = validateVariable(currentVariableTable, classTable, currentClassName, met1);
+    //if varInfo1 calls a methods then it has to be of object type
+    if(varInfo1->type.baseType != bt_object) typeError(not_object);
     clsName = varInfo1->type.objectClassName; 
     idInfo2 = validateMethod(classTable, clsName, met2);
     ArgumentMismatch(idInfo2, classTable, node->expression_list);
@@ -534,6 +547,9 @@ void TypeCheck::visitMemberAccessNode(MemberAccessNode* node) {
 
   //check if id1 is a variable of current scope or classMember
   idInfo1 = validateVariable(currentVariableTable, classTable, currentClassName, id1);
+  // if id1 is not an object
+  if(idInfo1->type.baseType != bt_object) typeError(not_object);
+
   clsName = idInfo1->type.objectClassName;
   idInfo2 = validateVariable(NULL, classTable, clsName, id2);
 
@@ -573,6 +589,8 @@ void TypeCheck::visitNewNode(NewNode* node) {
   std::string id;
   MethodTable* metTable;
 
+  node->visit_children(this);
+
   id = node->identifier->name;
 
   if(classTable->find(id) == classTable->end()) {
@@ -585,12 +603,12 @@ void TypeCheck::visitNewNode(NewNode* node) {
   metTable = classTable->at(id).methods;
 
   if(node->expression_list) { //second case
-    if(!metTable || metTable->find(id) == metTable->end()) {
+    if(!metTable || metTable->find(id) == metTable->end()) { // cant find any parametrized constructor
       typeError(argument_number_mismatch);
     }
     ArgumentMismatch(&metTable->at(id), classTable, node->expression_list);
   } else { //first case
-    if(metTable && metTable->find(id) != metTable->end() && metTable->at(id).parameters) {
+    if(metTable && metTable->find(id) != metTable->end() && metTable->at(id).parameters) { //can find the method but is parmetrized
         typeError(argument_number_mismatch);
     }
   }
